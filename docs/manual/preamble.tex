@@ -1,0 +1,114 @@
+% Shared layout for the Illuminati manual. Each manual-<lang>.tex loads this
+% after \documentclass and sets \manuallang (babel name) and \imgdir.
+% Build with XeLaTeX (see build.ps1); the fonts are the app's own.
+
+\usepackage{fontspec}
+\setmainfont{Literata}[
+  Path=../../assets/fonts/literata/, Extension=.ttf,
+  UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\setsansfont{AtkinsonHyperlegible}[
+  Path=../../assets/fonts/atkinson/, Extension=.ttf,
+  UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\newfontfamily\dyslexicfont{OpenDyslexic}[
+  Path=../../assets/fonts/opendyslexic/, Extension=.otf,
+  UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic, BoldItalicFont=*-Bold-Italic]
+\newfontfamily\garamondfont{EBGaramond}[
+  Path=../../assets/fonts/ebgaramond/, Extension=.ttf,
+  UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+
+\usepackage[a4paper, margin=2.4cm, headheight=14pt]{geometry}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{booktabs, tabularx, array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[most]{tcolorbox}
+\usepackage[hidelinks]{hyperref}
+
+% Colours from the app's logo.
+\definecolor{violet}{HTML}{34206A}
+\definecolor{violetlight}{HTML}{EDE8F7}
+\definecolor{gold}{HTML}{C9A227}
+\definecolor{goldlight}{HTML}{FBF4DF}
+
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+\setlist{itemsep=0.25em, topsep=0.3em}
+\linespread{1.08}
+
+\titleformat{\section}{\sffamily\Large\bfseries\color{violet}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\sffamily\large\bfseries\color{violet}}{\thesubsection}{0.7em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.1em}{0.35em}
+% Don't leave a heading alone at the bottom of a page.
+\usepackage{needspace, etoolbox}
+\pretocmd{\section}{\needspace{8\baselineskip}}{}{}
+\pretocmd{\subsection}{\needspace{5\baselineskip}}{}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\small\color{violet} Illuminati}
+\fancyhead[R]{\sffamily\small\color{gray}\nouppercase{\rightmark}}
+\fancyfoot[C]{\sffamily\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+% \rightmark is the first section mark on the page.
+\renewcommand{\sectionmark}[1]{\markboth{#1}{#1}}
+\renewcommand{\subsectionmark}[1]{}
+
+% Keep catalogue names whole in every language.
+\babelhyphenation{Wiki-source Guten-berg}
+
+% A key or key combination, e.g. \kbd{Ctrl+F}.
+\newcommand{\kbd}[1]{\tikz[baseline=(k.base)]\node[draw=gray!60, fill=gray!8,
+  rounded corners=2pt, inner sep=2pt, font=\sffamily\small](k){#1};}
+\usepackage{tikz}
+
+% Arrow keys (the sans font has no arrow characters).
+\newcommand{\kright}{\kbd{\ensuremath{\rightarrow}}}
+\newcommand{\kleft}{\kbd{\ensuremath{\leftarrow}}}
+\newcommand{\kup}{\kbd{\ensuremath{\uparrow}}}
+\newcommand{\kdown}{\kbd{\ensuremath{\downarrow}}}
+
+% A button, menu item or label as it appears in the app.
+\newcommand{\ui}[1]{\textsf{\textbf{#1}}}
+
+% Screenshot with caption; skipped if the image file isn't there.
+\newcommand{\shot}[2]{%
+  \IfFileExists{\imgdir/#1.jpg}{%
+    \begin{figure}[htbp]\centering
+      \fcolorbox{gray!40}{white}{\includegraphics[width=0.96\textwidth]{\imgdir/#1.jpg}}
+      \caption{#2}
+    \end{figure}}{}}
+
+\newtcolorbox{tip}[1]{enhanced, colback=goldlight, colframe=gold,
+  boxrule=0.6pt, arc=3pt, left=8pt, right=8pt, top=5pt, bottom=5pt,
+  fonttitle=\sffamily\bfseries, coltitle=black, colbacktitle=gold!35,
+  title={#1}}
+\newtcolorbox{note}[1]{enhanced, colback=violetlight, colframe=violet,
+  boxrule=0.6pt, arc=3pt, left=8pt, right=8pt, top=5pt, bottom=5pt,
+  fonttitle=\sffamily\bfseries, coltitle=white, colbacktitle=violet,
+  title={#1}}
+
+% Two-column tables that fill the text width.
+\newenvironment{keytable}[2]{%
+  \renewcommand{\arraystretch}{1.3}%
+  \rowcolors{2}{white}{violetlight}%
+  \tabularx{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.33\textwidth}X@{}}
+  \toprule \textsf{\textbf{#1}} & \textsf{\textbf{#2}} \\ \midrule}{%
+  \bottomrule\endtabularx}
+
+% Title page: \maketitlepage{subtitle}{version line}{blurb}
+\newcommand{\maketitlepage}[3]{%
+  \begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    \includegraphics[width=4.2cm]{../../assets/icon/app_icon.png}\par\vspace{1.2cm}
+    {\sffamily\fontsize{40}{46}\selectfont\bfseries\color{violet} Illuminati\par}
+    \vspace{0.5cm}
+    {\sffamily\LARGE #1\par}
+    \vspace{1.5cm}
+    {\large\itshape #3\par}
+    \vfill
+    {\sffamily\color{gray} #2\par}
+  \end{titlepage}}

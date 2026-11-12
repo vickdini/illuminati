@@ -1,0 +1,341 @@
+\documentclass[11pt]{article}
+\usepackage[ngerman]{babel}
+\newcommand{\imgdir}{images/de}
+\input{preamble}
+\hypersetup{pdftitle={Illuminati — Benutzerhandbuch}, pdfauthor={Illuminati}, pdflang={de}}
+
+\begin{document}
+
+\maketitlepage{Benutzerhandbuch}{Version 1.0 · Windows, macOS, Linux und Android}%
+  {Finde, lade und lies Bücher, die nie urheberrechtlich geschützt waren\\oder deren Schutz abgelaufen ist.}
+
+{\setcounter{tocdepth}{1}\tableofcontents}
+\newpage
+
+% ---------------------------------------------------------------------------
+\section{Willkommen}
+
+Illuminati ist eine Lese-App für Windows, macOS, Linux und Android. Sie funktioniert wie
+E-Book-Apps, die du vielleicht schon kennst, mit einem Unterschied: Alle Bücher darin sind
+kostenlos und legal herunterzuladen, weil ihr Urheberrecht abgelaufen ist oder nie bestand.
+
+\begin{itemize}
+  \item Über 75.000 Bücher von \textbf{Project Gutenberg}, dazu \textbf{Standard Ebooks},
+        \textbf{Wikisource} und das \textbf{Internet Archive}.
+  \item Ein angenehmer Reader mit Markierungen, Notizen, Lesezeichen, Suche, Wörterbuch und
+        Übersetzung.
+  \item Deine eigene Bibliothek mit Regalen und Leselisten.
+  \item Anzeige- und Barrierefreiheitseinstellungen, darunter eine Schrift für Menschen mit
+        Legasthenie.
+  \item Kein Konto, kein Abo, keine Werbung. Alles bleibt auf deinem Gerät.
+\end{itemize}
+
+Die Oberfläche gibt es auf Deutsch, Englisch, Spanisch, Französisch, Italienisch und
+Portugiesisch.
+
+% ---------------------------------------------------------------------------
+\section{Erste Schritte}
+
+\subsection{Installation}
+\begin{itemize}
+  \item \textbf{Windows:} Kopiere den ganzen Ordner \texttt{Illuminati} auf deinen Computer und
+        starte \texttt{illuminati.exe}. Lass die anderen Dateien daneben liegen; das Programm
+        braucht sie.
+  \item \textbf{Android:} Installiere die \texttt{.apk}-Datei. Eventuell musst du in den
+        Einstellungen des Telefons die Installation aus dieser Quelle erlauben.
+  \item \textbf{macOS und Linux:} Installiere die Version für dein System.
+\end{itemize}
+
+\subsection{Der Startbildschirm}
+Auf einem Computer öffnet sich die App maximiert. Der Startbildschirm hat zwei Teile:
+
+\begin{enumerate}
+  \item \ui{Deine Bibliothek} (oben): die Bücher, die du heruntergeladen hast, das zuletzt
+        gelesene zuerst, jeweils mit Fortschrittsbalken. Die Schaltfläche
+        \ui{Bibliothek \& Regale} öffnet deine ganze Bibliothek.
+  \item \ui{Kostenlose Bücher entdecken} (unten): ein Suchfeld, die Katalogsprache, die
+        Kategorien, eine Reihe für jeden weiteren Katalog und zum Schluss der Katalog von Project
+        Gutenberg.
+\end{enumerate}
+
+\shot{home}{Der Startbildschirm.}
+
+Die beiden Schaltflächen oben rechts öffnen \ui{Anzeige \& Barrierefreiheit}
+(Abschnitt~\ref{sec:display}) und \ui{Über}; dort steht, woher die Bücher kommen, und du findest
+die Lizenzen der Schriften.
+
+% ---------------------------------------------------------------------------
+\section{Bücher finden}
+
+\subsection{Suche}
+Tippe in \ui{Nach Titel oder Autor suchen}. Die Suche
+\begin{itemize}
+  \item findet jeden Teil eines Titels oder Autorennamens: \emph{miserab} findet
+        \emph{Les Misérables};
+  \item ignoriert Akzente und Groß- und Kleinschreibung: \emph{misérable} und \emph{MISERABLE}
+        liefern dasselbe;
+  \item durchsucht alle Kataloge gleichzeitig; jeder zeigt seine Treffer in einer eigenen Reihe.
+\end{itemize}
+Leere das Feld mit der Schaltfläche \ui{×}, um wieder die beliebten Bücher zu sehen.
+
+\subsection{Kategorien und Sprache}
+Die Chips unter dem Suchfeld (\ui{Belletristik}, \ui{Krimi}, \ui{Science-Fiction}, \ui{Lyrik}…)
+beschränken alle Kataloge auf ein Thema. Das Sprachmenü rechts zeigt nur Bücher in einer Sprache
+oder \ui{Alle Sprachen}. Kataloge ohne Treffer für die gewählte Sprache oder Kategorie werden
+ausgeblendet.
+
+\subsection{Die Kataloge}
+\begin{keytable}{Katalog}{Was er bietet}
+  Project Gutenberg & Die größte kostenlose Bibliothek mit über 75.000 Büchern, nach
+                      Beliebtheit sortiert. Viele gibt es als illustrierte Ausgabe. \\
+  Standard Ebooks   & Sorgfältig korrigierte, schön gesetzte Klassiker auf Englisch. \\
+  Wikisource        & Von Freiwilligen transkribierte Texte in vielen Sprachen. Das E-Book wird
+                      beim Herunterladen erstellt; sehr lange Werke (etwa mehrbändige Romane)
+                      sind eventuell nicht verfügbar. \\
+  Internet Archive  & Scans alter gedruckter Ausgaben, die vor mindestens 95 Jahren erschienen
+                      sind. Der Text wurde automatisch aus den Scans gewonnen und kann Fehler
+                      enthalten. \\
+\end{keytable}
+
+\subsection{Die Seite eines Buches}
+Tippe auf ein Cover, um die Seite des Buches zu öffnen. Sie zeigt die Zusammenfassung, Themen,
+Sprache, Katalog und einen Hinweis zum Urheberrecht. Von dort kannst du:
+\begin{itemize}
+  \item \ui{Kostenlos herunterladen}: Das Buch wird auf deinem Gerät gespeichert und lässt sich
+        offline lesen. Jedes Cover im Katalog hat außerdem eine kleine Download-Schaltfläche.
+  \item \ui{Jetzt lesen} oder \ui{Weiterlesen}, sobald es heruntergeladen ist.
+  \item \ui{Möchte ich lesen}, \ui{Gelesen} und \ui{Zu einem Regal hinzufügen}, auch schon vor
+        dem Herunterladen (Abschnitt~\ref{sec:library}).
+  \item \ui{Illustrierte Ausgabe laden}, für Gutenberg-Bücher, die du ohne Bilder geladen hast.
+\end{itemize}
+
+\shot{details}{Die Seite eines Buches.}
+
+% ---------------------------------------------------------------------------
+\section{Deine Bibliothek}\label{sec:library}
+
+\ui{Bibliothek \& Regale} auf dem Startbildschirm öffnet alle Bücher, die du gespeichert hast:
+heruntergeladene und solche, die du dir ohne Download für später gemerkt hast (mit blassem Cover
+und einer kleinen Wolke).
+
+\shot{library}{Die Bibliothek mit Ansichten und Regalen.}
+
+\subsection{Ansichten, Filter und Sortierung}
+Die Chips oben wählen eine Ansicht, jeweils mit der Anzahl der Bücher: \ui{Alle},
+\ui{Heruntergeladen}, \ui{Möchte ich lesen}, \ui{Am Lesen}, \ui{Gelesen} und danach jedes deiner
+Regale. Das Feld darüber filtert nach Titel oder Autor. Die Sortier-Schaltfläche (oben rechts)
+ordnet die Bücher nach \ui{Zuletzt gelesen}, \ui{Titel}, \ui{Autor} (nach Nachname),
+\ui{Fortschritt} oder \ui{Zuletzt hinzugefügt}. Die App merkt sich deine Wahl.
+
+\subsection{Leselisten}
+\begin{itemize}
+  \item \ui{Möchte ich lesen} merkt ein Buch für später vor, ohne es herunterzuladen. Sobald du
+        das Buch öffnest, verlässt es diese Liste.
+  \item \ui{Gelesen} wird automatisch gesetzt, wenn du das Ende eines Buches erreichst (du kannst
+        es rückgängig machen), oder von Hand.
+\end{itemize}
+
+\subsection{Regale}
+Regale sind deine eigenen Sammlungen, etwa \emph{Lieblingsbücher} oder \emph{Philosophie}. Ein
+Buch kann in mehreren Regalen stehen.
+\begin{itemize}
+  \item Lege eines mit \ui{Neues Regal} in der Bibliothek an, oder über
+        \ui{Zu einem Regal hinzufügen} bei einem beliebigen Buch.
+  \item Klicke mit der rechten Maustaste auf ein Regal (oder halte es gedrückt), um es
+        umzubenennen oder zu löschen. Wenn du ein Regal löschst, bleiben seine Bücher in deiner
+        Bibliothek.
+\end{itemize}
+
+\subsection{Das Buchmenü}
+Klicke mit der rechten Maustaste auf ein Buch (oder halte es auf dem Telefon gedrückt). Du siehst
+\ui{Buchdetails}, \ui{Zu einem Regal hinzufügen}, \ui{Möchte ich lesen},
+\ui{Als gelesen markieren} und zwei Möglichkeiten, es zu entfernen:
+\begin{itemize}
+  \item \ui{Download entfernen} gibt Speicherplatz frei, lässt das Buch aber mit Notizen, Regalen
+        und Leseposition in deiner Bibliothek.
+  \item \ui{Aus der Bibliothek entfernen} löscht alles, auch Notizen und Lesezeichen.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Lesen}
+
+Tippe auf ein heruntergeladenes Buch, um es zu öffnen. Es öffnet sich dort, wo du aufgehört hast.
+
+\shot{reader}{Der Reader mit seiner Werkzeugleiste.}
+
+\subsection{Umblättern}
+\begin{keytable}{Aktion}{So geht’s}
+  Nächste Seite         & Rechten Rand antippen · \kright{} · \kbd{Bild ab} · \kbd{Leertaste} \\
+  Vorherige Seite       & Linken Rand antippen · \kleft{} · \kbd{Bild auf} \\
+  Ein Stück scrollen    & \kup{} \kdown{} oder das Mausrad \\
+  Werkzeugleiste zeigen & Mitte der Seite antippen \\
+\end{keytable}
+
+\subsection{Die Werkzeugleiste}
+Tippe auf die Mitte der Seite, um sie einzublenden. Oben: zurück zur Bibliothek, Suche
+(Abschnitt~\ref{sec:search}), Lesezeichen, Inhalt und Anzeigeeinstellungen. Unten: vorheriges und
+nächstes Kapitel, ein Schieberegler zum Springen zwischen Kapiteln und dein Fortschritt.
+
+\subsection{Fortschritt und verbleibende Zeit}
+Die unterste Zeile zeigt, wie viele Minuten das Kapitel noch dauert und wie weit du im Buch bist.
+Die Zeit beruht auf deiner eigenen Lesegeschwindigkeit, die die App beim Lesen lernt.
+
+\subsection{Inhalt und Bilder}
+\ui{Inhalt} zeigt die echten Kapitel des Buches, auch wenn eine Datei mehrere davon enthält. Bilder
+erscheinen im Text; tippe darauf, um sie im Vollbild zu sehen und zu vergrößern.
+
+% ---------------------------------------------------------------------------
+\section{Markierungen, Notizen und Lesezeichen}
+
+\subsection{Text auswählen}
+Auf dem Telefon hältst du ein Wort gedrückt und ziehst die Griffe. Am Computer ziehst du mit der
+Maus über den Text oder doppelklickst auf ein Wort und klickst dann mit der \textbf{rechten
+Maustaste} auf die Auswahl. Ein Menü erscheint mit:
+\begin{itemize}
+  \item \ui{Markieren}: hebt den Text in deiner Markierungsfarbe hervor.
+  \item \ui{Notiz}: eine Markierung mit deiner eigenen Notiz, in einer von vier Farben.
+  \item \ui{Nachschlagen} und \ui{Übersetzen} (Abschnitt~\ref{sec:lookup}).
+  \item \ui{Kopieren}.
+\end{itemize}
+Markierungen rasten an ganzen Wörtern ein. Markierungen mit Notiz sind unterstrichen. Wähle eine
+markierte Stelle erneut aus, um die Notiz zu bearbeiten oder die Markierung zu entfernen.
+
+\subsection{Lesezeichen}
+Nutze die Lesezeichen-Schaltfläche in der Werkzeugleiste oder \kbd{Strg+B}. Ein rotes Band zeigt,
+dass die Seite ein Lesezeichen hat.
+
+\subsection{Die Seitenleiste}
+Die Inhalt-Schaltfläche öffnet eine Leiste mit drei Reitern: \ui{Inhalt}, \ui{Lesezeichen} und
+\ui{Notizen}. Tippe auf einen Eintrag, um dorthin zu springen. \ui{Alles als Markdown kopieren}
+kopiert alle Markierungen und Notizen, bereit zum Einfügen in ein anderes Programm.
+
+% ---------------------------------------------------------------------------
+\section{Wörterbuch und Übersetzung}\label{sec:lookup}
+
+Wähle ein Wort (bis zu drei) aus und dann \ui{Nachschlagen}, um seine Bedeutungen zu sehen.
+Bedeutungen in der Sprache des Buches stehen zuerst. Sie stammen aus dem Wiktionary und sind auf
+Englisch verfasst.
+
+Wähle eine beliebige Stelle aus und dann \ui{Übersetzen}. Wähle die Zielsprache aus der Liste; die
+App merkt sie sich.
+
+\begin{note}{Internet erforderlich}
+Bedeutungen und Übersetzungen brauchen eine Internetverbindung. Der ausgewählte Text wird an das
+Wiktionary oder an MyMemory gesendet; sonst nichts.
+\end{note}
+
+% ---------------------------------------------------------------------------
+\section{In einem Buch suchen}\label{sec:search}
+
+Drücke \kbd{Strg+F} oder die Such-Schaltfläche in der Werkzeugleiste und tippe mindestens zwei
+Buchstaben. Die Suche ignoriert Groß- und Kleinschreibung und Akzente. Wähle einen Treffer, um
+dorthin zu springen. Eine Leiste oben zeigt \emph{3 von 27}: Mit ihren Pfeilen oder mit \kbd{F3}
+gehst du zum nächsten Treffer. \kbd{Esc} schließt sie.
+
+% ---------------------------------------------------------------------------
+\section{Anzeige und Barrierefreiheit}\label{sec:display}
+
+Öffne die Einstellungen mit der Einstellungs-Schaltfläche auf dem Startbildschirm oder mit der
+Text-Schaltfläche im Reader. Eine Vorschau oben zeigt jede Änderung sofort.
+
+\shot{settings}{Anzeige \& Barrierefreiheit.}
+
+\subsection{Sprache}
+\ui{App-Sprache} stellt die Oberfläche sofort auf Deutsch, Englisch, Spanisch, Französisch,
+Italienisch oder Portugiesisch um. \ui{Wie auf dem Gerät} folgt der Sprache deines Geräts.
+
+\subsection{Text}
+\begin{itemize}
+  \item Design: \ui{Hell}, \ui{Sepia} oder \ui{Dunkel}.
+  \item Schrift: vier Schriften, die in der App enthalten sind, damit Bücher auf jedem Gerät
+        gleich aussehen:
+  \begin{itemize}
+    \item \textbf{Literata}, für das Lesen am Bildschirm entworfen (Standard);
+    \item {\garamondfont EB Garamond}, eine klassische Buchschrift;
+    \item {\sffamily Atkinson Hyperlegible}, so gestaltet, dass sich ähnliche Buchstaben leicht
+          unterscheiden lassen;
+    \item {\dyslexicfont OpenDyslexic}, für Leserinnen und Leser mit Legasthenie.
+  \end{itemize}
+  \item \ui{Schriftgröße}, \ui{Zeilenabstand} und \ui{Buchstabenabstand}.
+  \item \ui{Blocksatz}: Schalte ihn aus, damit die Wortabstände gleich sind; viele Menschen mit
+        Legasthenie finden das leichter.
+\end{itemize}
+
+\subsection{Seite}
+\ui{Ränder} und \ui{Zeilenbreite}. Kürzere Zeilen lassen sich leichter verfolgen.
+
+\subsection{Bildschirm}
+\ui{Helligkeit} dunkelt die ganze App ab. \ui{Wärme} verringert das blaue Licht, wie ein
+Nachtmodus. Beides wirkt zusätzlich zu den Einstellungen deines Geräts.
+
+\ui{Auf Standard zurücksetzen} stellt alle diese Einstellungen wieder auf den Anfangszustand.
+
+% ---------------------------------------------------------------------------
+\section{Tastenkürzel}
+
+\begin{keytable}{Tasten}{Aktion}
+  \kright{} \kbd{Bild ab} \kbd{Leertaste} & Nächste Seite \\
+  \kleft{} \kbd{Bild auf}                  & Vorherige Seite \\
+  \kup{} \kdown{}                       & Ein Stück scrollen \\
+  \kbd{Strg+F}                          & Im Buch suchen \\
+  \kbd{F3}                              & Nächster Treffer \\
+  \kbd{Strg+B}                          & Lesezeichen auf der Seite setzen oder entfernen \\
+  \kbd{Esc}                             & Suche oder Leiste schließen, oder zurück zur
+                                          Bibliothek \\
+  \kbd{Umschalt} + Pfeiltasten          & Eine Textauswahl erweitern \\
+\end{keytable}
+
+% ---------------------------------------------------------------------------
+\section{Datenschutz und deine Daten}
+
+Illuminati hat keine Konten und kein Tracking. Deine Bibliothek, Notizen und Einstellungen werden
+nur auf deinem Gerät gespeichert (unter Windows in
+\texttt{\%APPDATA\%\textbackslash Illuminati}).
+
+Die App verbindet sich nur mit dem Internet, um:
+\begin{itemize}
+  \item die Kataloge zu durchsuchen und Bücher und Cover herunterzuladen;
+  \item ausgewählten Text nachzuschlagen oder zu übersetzen; er wird an das Wiktionary oder an
+        MyMemory gesendet.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Zum Urheberrecht}
+
+Alle Bücher sind in den USA gemeinfrei. Einige Texte von Wikisource stehen stattdessen unter
+freien Lizenzen (etwa CC BY-SA), die freies Lesen und Weitergeben erlauben. Aus dem Internet
+Archive werden nur Bücher gezeigt, die vor mindestens 95 Jahren erschienen sind.
+
+\begin{tip}{Prüfe die Gesetze deines Landes}
+Das Urheberrecht ist von Land zu Land verschieden. Ein Buch, das in den USA frei ist, kann bei dir
+noch geschützt sein. Prüfe deshalb vor dem Herunterladen die Gesetze deines Landes.
+\end{tip}
+
+% ---------------------------------------------------------------------------
+\section{Fehlerbehebung}
+
+\begin{keytable}{Meldung}{Was tun}
+  Ein Katalog ist nicht erreichbar & Der Dienst ist vielleicht ausgelastet oder deine
+                             Verbindung unterbrochen. Nutze später \ui{Erneut versuchen}; die
+                             anderen Kataloge funktionieren weiter. \\
+  Dieser Titel hat keine E-Book-Ausgabe & Wahrscheinlich ist es ein Hörbuch. Suche eine andere
+                             Ausgabe. \\
+  Wikisource konnte dieses Buch nicht erstellen & Das Werk ist zu lang für den Dienst von
+                             Wikisource. Versuche einen seiner Bände oder einen anderen
+                             Katalog. \\
+  Tageslimit für kostenlose Übersetzungen erreicht & MyMemory erlaubt pro Tag nur eine begrenzte
+                             Zahl kostenloser Übersetzungen. Versuch es morgen wieder. \\
+  Der Download hat zu lange gedauert & Prüfe deine Verbindung und versuch es erneut. \\
+\end{keytable}
+
+% ---------------------------------------------------------------------------
+\section{Danksagungen}
+
+Bücher: Project Gutenberg, Standard Ebooks, Wikisource (über WS Export) und Internet Archive.
+Bedeutungen: Wiktionary (CC BY-SA). Übersetzungen: MyMemory.
+
+Schriften unter der SIL Open Font License: Literata, EB Garamond, Atkinson Hyperlegible (Braille
+Institute) und OpenDyslexic (Abbie Gonzalez). Ihre Lizenzen findest du in der App unter
+\ui{Über} → \ui{Lizenzen}.
+
+\end{document}

@@ -65,6 +65,12 @@ the values (keep `{placeholders}` and plural forms), add the language to
 also runs on every build). `flutter test` checks that every language has every
 string with the same placeholders.
 
+## Manual
+
+A user manual in every interface language is in [docs/manual](docs/manual)
+(`manual-<code>.pdf`). It is written in LaTeX with the app's own fonts; rebuild
+it with `docs/manual/build.ps1` (needs XeLaTeX).
+
 ## Run
 
 ```sh

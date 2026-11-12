@@ -1,0 +1,318 @@
+\documentclass[11pt]{article}
+\usepackage[english]{babel}
+\newcommand{\imgdir}{images/en}
+\input{preamble}
+\hypersetup{pdftitle={Illuminati — User manual}, pdfauthor={Illuminati}, pdflang={en}}
+
+\begin{document}
+
+\maketitlepage{User manual}{Version 1.0 · Windows, macOS, Linux and Android}%
+  {Find, download and read books that were never under copyright\\or whose copyright has expired.}
+
+{\setcounter{tocdepth}{1}\tableofcontents}
+\newpage
+
+% ---------------------------------------------------------------------------
+\section{Welcome}
+
+Illuminati is a reading app for Windows, macOS, Linux and Android. It works like the e-book
+apps you may know, with one difference: every book it offers is free and legal to download,
+because its copyright has expired or it was never under copyright.
+
+\begin{itemize}
+  \item Over 75,000 books from \textbf{Project Gutenberg}, plus \textbf{Standard Ebooks},
+        \textbf{Wikisource} and the \textbf{Internet Archive}.
+  \item A comfortable reader with highlights, notes, bookmarks, search, a dictionary and
+        translation.
+  \item Your own library, with shelves and reading lists.
+  \item Display and accessibility settings, including a dyslexia-friendly font.
+  \item No account, no subscription and no advertising. Everything is stored on your device.
+\end{itemize}
+
+The interface is available in English, Spanish, French, German, Italian and Portuguese.
+
+% ---------------------------------------------------------------------------
+\section{Getting started}
+
+\subsection{Installing}
+\begin{itemize}
+  \item \textbf{Windows:} copy the whole \texttt{Illuminati} folder to your computer and run
+        \texttt{illuminati.exe}. Keep the files next to it; the program needs them.
+  \item \textbf{Android:} install the \texttt{.apk} file. You may need to allow installing apps
+        from this source in your phone's settings.
+  \item \textbf{macOS and Linux:} install the build made for your system.
+\end{itemize}
+
+\subsection{The home screen}
+On a computer the app opens maximized. The home screen has two parts:
+
+\begin{enumerate}
+  \item \ui{Your library} (top): the books you have downloaded, most recently read first, with
+        a progress bar. The \ui{Library \& shelves} button opens your whole library.
+  \item \ui{Discover free books} (below): a search box, catalog language, categories, a row for
+        each extra catalog and, at the bottom, the Project Gutenberg catalog.
+\end{enumerate}
+
+\shot{home}{The home screen.}
+
+The two buttons at the top right open \ui{Display \& accessibility} (section~\ref{sec:display})
+and \ui{About}, which shows where books come from and the licences of the fonts.
+
+% ---------------------------------------------------------------------------
+\section{Finding books}
+
+\subsection{Searching}
+Type in \ui{Search by title or author}. The search:
+\begin{itemize}
+  \item matches any part of a title or author name: \emph{miserab} finds \emph{Les Misérables};
+  \item ignores accents and capitals: \emph{misérable} and \emph{MISERABLE} give the same results;
+  \item searches every catalog at once; each catalog shows its matches in its own row.
+\end{itemize}
+Clear the box with the \ui{×} button to return to the popular books.
+
+\subsection{Categories and language}
+The chips under the search box (\ui{Fiction}, \ui{Mystery}, \ui{Science Fiction}, \ui{Poetry}…)
+narrow every catalog to one subject. The language menu on the right shows only books in one
+language, or \ui{All languages}. A catalog with nothing for the chosen language or category is
+hidden.
+
+\subsection{The catalogs}
+\begin{keytable}{Catalog}{What it offers}
+  Project Gutenberg & The largest free library, over 75,000 books, sorted by popularity. Often
+                      available in an illustrated edition. \\
+  Standard Ebooks   & Carefully proofread classics with beautiful typography, in English. \\
+  Wikisource        & Texts transcribed by volunteers, in many languages. The e-book is prepared
+                      when you download it; very long works (for example novels in several
+                      volumes) may not be available. \\
+  Internet Archive  & Scans of old printed editions, published 95 or more years ago. The text was
+                      made automatically from the scans and may contain errors. \\
+\end{keytable}
+
+\subsection{A book's page}
+Tap a cover to open the book's page. It shows the summary, subjects, language and catalog, and a
+note about copyright. From here you can:
+\begin{itemize}
+  \item \ui{Download free}: the book is saved on your device, ready to read offline. A small
+        download button also appears on every cover in the catalog.
+  \item \ui{Read now} or \ui{Continue reading}, once it is downloaded.
+  \item \ui{Want to read}, \ui{Finished} and \ui{Add to shelf}, even before downloading
+        (section~\ref{sec:library}).
+  \item \ui{Get illustrated edition}, for Gutenberg books you downloaded without pictures.
+\end{itemize}
+
+\shot{details}{A book's page.}
+
+% ---------------------------------------------------------------------------
+\section{Your library}\label{sec:library}
+
+\ui{Library \& shelves} on the home screen opens every book you have saved: downloaded books and
+books you saved for later without downloading (shown with a dimmed cover and a cloud).
+
+\shot{library}{The library, with its views and shelves.}
+
+\subsection{Views, filter and sorting}
+The chips at the top show a view, each with the number of books:
+\ui{All}, \ui{Downloaded}, \ui{Want to read}, \ui{Reading}, \ui{Finished}, and then each of your
+shelves. The box above them filters by title or author. The sort button (top right) orders the
+books by \ui{Recently read}, \ui{Title}, \ui{Author} (by surname), \ui{Progress} or
+\ui{Recently added}. The app remembers your choice.
+
+\subsection{Reading lists}
+\begin{itemize}
+  \item \ui{Want to read} saves a book for later, without downloading it. Opening the book removes
+        it from this list.
+  \item \ui{Finished} is set automatically when you reach the end of a book (you can undo it), or
+        by hand.
+\end{itemize}
+
+\subsection{Shelves}
+Shelves are your own collections, such as \emph{Favorites} or \emph{Philosophy}. A book can be on
+several shelves.
+\begin{itemize}
+  \item Create one with \ui{New shelf} in the library, or from \ui{Add to shelf} on any book.
+  \item Right-click (or long-press) a shelf to rename or delete it. Deleting a shelf keeps its
+        books in your library.
+\end{itemize}
+
+\subsection{The book menu}
+Right-click a book (or long-press it on a phone) for \ui{Book details}, \ui{Add to shelf},
+\ui{Want to read}, \ui{Mark as finished} and two ways of removing it:
+\begin{itemize}
+  \item \ui{Remove download} frees the space but keeps the book in your library, with its notes,
+        shelves and reading position.
+  \item \ui{Remove from library} removes everything, including notes and bookmarks.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Reading}
+
+Tap a downloaded book to open it. It opens where you left off.
+
+\shot{reader}{The reader with its toolbar.}
+
+\subsection{Turning pages}
+\begin{keytable}{Action}{How}
+  Next page        & Tap the right edge · \kright{} · \kbd{Page Down} · \kbd{Space} \\
+  Previous page    & Tap the left edge · \kleft{} · \kbd{Page Up} \\
+  Scroll a little  & \kup{} \kdown{} or the mouse wheel \\
+  Show the toolbar & Tap the middle of the page \\
+\end{keytable}
+
+\subsection{The toolbar}
+Tap the middle of the page to show it. At the top: back to the library, search
+(section~\ref{sec:search}), bookmark, contents and display settings. At the bottom: previous and
+next chapter, a slider to jump between chapters, and your progress.
+
+\subsection{Progress and time left}
+The bottom line shows how many minutes are left in the chapter and how far you are in the book.
+The time is based on your own reading speed, which the app learns as you read.
+
+\subsection{Contents and pictures}
+\ui{Contents} lists the book's real chapters, even when a file holds several of them. Pictures
+appear in the text; tap one to see it full screen and zoom in.
+
+% ---------------------------------------------------------------------------
+\section{Highlights, notes and bookmarks}
+
+\subsection{Selecting text}
+On a phone, long-press a word and drag the handles. On a computer, drag over the text or
+double-click a word, then \textbf{right-click} the selection. A menu appears with:
+\begin{itemize}
+  \item \ui{Highlight}: marks the text in your highlight colour.
+  \item \ui{Note}: a highlight with your own note, and a choice of four colours.
+  \item \ui{Define} and \ui{Translate} (section~\ref{sec:lookup}).
+  \item \ui{Copy}.
+\end{itemize}
+Highlights snap to whole words. Highlights with a note are underlined. Select a highlighted
+passage again to edit its note or remove it.
+
+\subsection{Bookmarks}
+Use the bookmark button in the toolbar, or \kbd{Ctrl+B}. A red ribbon shows that the page is
+bookmarked.
+
+\subsection{The side panel}
+The \ui{Contents} button opens a panel with three tabs: \ui{Contents}, \ui{Bookmarks} and
+\ui{Notes}. Tap any entry to jump to it. \ui{Copy all as Markdown} copies all your highlights and
+notes, ready to paste into another program.
+
+% ---------------------------------------------------------------------------
+\section{Dictionary and translation}\label{sec:lookup}
+
+Select a word (up to three words) and choose \ui{Define} to see its definitions. Definitions in
+the book's language are shown first. They come from Wiktionary and are written in English.
+
+Select any passage and choose \ui{Translate}. Choose the target language from the list; the app
+remembers it.
+
+\begin{note}{Internet needed}
+Definitions and translations need an internet connection. The selected text is sent to
+Wiktionary or MyMemory; nothing else is sent.
+\end{note}
+
+% ---------------------------------------------------------------------------
+\section{Searching inside a book}\label{sec:search}
+
+Press \kbd{Ctrl+F} or use the search button in the toolbar, and type at least two letters. The
+search ignores capitals and accents. Choose a result to jump to it. A bar at the top shows
+\emph{3 of 27}: use its arrows, or \kbd{F3}, to go to the next result. \kbd{Esc} closes it.
+
+% ---------------------------------------------------------------------------
+\section{Display and accessibility}\label{sec:display}
+
+Open it with the sliders button on the home screen, or the text button in the reader. A preview
+at the top shows each change as you make it.
+
+\shot{settings}{Display and accessibility.}
+
+\subsection{Language}
+\ui{App language} switches the interface to English, Spanish, French, German, Italian or
+Portuguese at once. \ui{Same as device} follows your device's language.
+
+\subsection{Text}
+\begin{itemize}
+  \item \ui{Theme}: light, sepia or dark.
+  \item \ui{Font}: four fonts included with the app, so books look the same on every device:
+  \begin{itemize}
+    \item \textbf{Literata}, designed for reading on screens (the default);
+    \item {\garamondfont EB Garamond}, a classic book face;
+    \item {\sffamily Atkinson Hyperlegible}, designed so that similar letters are easy to tell
+          apart;
+    \item {\dyslexicfont OpenDyslexic}, designed for readers with dyslexia.
+  \end{itemize}
+  \item \ui{Text size}, \ui{Line spacing} and \ui{Letter spacing}.
+  \item \ui{Justify text}: turn it off for even spacing between words, which many readers with
+        dyslexia find easier.
+\end{itemize}
+
+\subsection{Page}
+\ui{Margins} and \ui{Line width}. Shorter lines are easier to follow.
+
+\subsection{Screen}
+\ui{Brightness} dims the whole app. \ui{Warmth} reduces blue light, like a night mode. Both work
+on top of your device's own settings.
+
+\ui{Reset to defaults} restores all these settings.
+
+% ---------------------------------------------------------------------------
+\section{Keyboard shortcuts}
+
+\begin{keytable}{Keys}{Action}
+  \kright{} \kbd{Page Down} \kbd{Space} & Next page \\
+  \kleft{} \kbd{Page Up}                 & Previous page \\
+  \kup{} \kdown{}                        & Scroll a little \\
+  \kbd{Ctrl+F}                         & Search in the book \\
+  \kbd{F3}                             & Next search result \\
+  \kbd{Ctrl+B}                         & Bookmark the page, or remove the bookmark \\
+  \kbd{Esc}                            & Close search or the toolbar, or go back to the library \\
+  \kbd{Shift} + arrows                 & Extend a text selection \\
+\end{keytable}
+
+% ---------------------------------------------------------------------------
+\section{Privacy and your data}
+
+Illuminati has no account and no tracking. Your library, notes and settings are stored only on
+your device (on Windows, in \texttt{\%APPDATA\%\textbackslash Illuminati}).
+
+The app connects to the internet only to:
+\begin{itemize}
+  \item browse and search the catalogs and download books and covers;
+  \item define or translate text you selected, which is sent to Wiktionary or MyMemory.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{About copyright}
+
+All books are in the public domain in the United States. Some Wikisource texts are instead under
+free licences (such as CC BY-SA), which allow you to read and share them freely. From the Internet
+Archive, only books published 95 or more years ago are listed.
+
+\begin{tip}{Check your local laws}
+Copyright terms differ between countries. A book that is free in the United States may still be
+protected where you live, so check your local laws before downloading.
+\end{tip}
+
+% ---------------------------------------------------------------------------
+\section{Troubleshooting}
+
+\begin{keytable}{Message}{What to do}
+  Couldn't reach a catalog & The service may be busy or your connection down. Use \ui{Try again}
+                             later; the other catalogs keep working. \\
+  This title has no e-book edition & It is probably an audio book. Look for another edition. \\
+  Wikisource could not prepare this book & The work is too long for Wikisource's service. Try
+                             one of its volumes, or another catalog. \\
+  The free daily translation limit has been reached & MyMemory allows a limited number of free
+                             translations per day. Try again tomorrow. \\
+  The download took too long & Check your connection and try again. \\
+\end{keytable}
+
+% ---------------------------------------------------------------------------
+\section{Credits}
+
+Books: Project Gutenberg, Standard Ebooks, Wikisource (via WS Export) and the Internet Archive.
+Definitions: Wiktionary (CC BY-SA). Translations: MyMemory.
+
+Fonts, under the SIL Open Font License: Literata, EB Garamond, Atkinson Hyperlegible (Braille
+Institute) and OpenDyslexic (Abbie Gonzalez). Their licences are under \ui{About} → \ui{View
+licenses} in the app.
+
+\end{document}
