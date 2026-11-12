@@ -96,9 +96,9 @@ notice on every book page and in About.
 
 ## Before publishing
 
-- Put a contact URL (website or public repository) in `CatalogService.userAgent`
-  (`lib/services/catalog_service.dart`). Wikimedia asks apps to identify
-  themselves this way and rate-limits anonymous clients more strictly.
+- Requests identify the app with the repository URL (`CatalogService.userAgent`
+  in `lib/services/catalog_service.dart`), as Wikimedia asks. If the project
+  moves or gets its own website, update it there.
 
 - Android: create a signing key and configure `android/app/build.gradle.kts`
   (release builds currently use the debug key).

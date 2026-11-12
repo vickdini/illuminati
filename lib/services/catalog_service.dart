@@ -18,10 +18,10 @@ class CatalogPage {
 /// `s.word` matches a subject, `l.xx` restricts the language.
 class CatalogService {
   static const site = 'https://www.gutenberg.org';
-  /// Sent with every request. Wikimedia (Wikisource) asks apps to include a
-  /// way to contact them: once the project has a website or public
-  /// repository, add it here, e.g. 'Illuminati/1.0 (https://example.org)'.
-  static const userAgent = 'Illuminati/1.0 (free e-reader app)';
+  /// Sent with every request. Wikimedia (Wikisource) asks apps to say who
+  /// they are and how to reach the maintainers, so it includes the project's
+  /// repository.
+  static const userAgent = 'Illuminati/1.0 (https://github.com/vickdini/illuminati)';
 
   final http.Client _client;
   CatalogService([http.Client? client]) : _client = client ?? http.Client();
