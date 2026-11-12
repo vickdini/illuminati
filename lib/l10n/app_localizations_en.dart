@@ -813,4 +813,20 @@ class L10nEn extends L10n {
 
   @override
   String get errGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String updateReady(String version) {
+    return 'Illuminati $version is ready. It will be installed when you close the app.';
+  }
+
+  @override
+  String get updateReadyRestart => 'Restart now';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Illuminati $version is available.';
+  }
+
+  @override
+  String get updateDownload => 'Download';
 }

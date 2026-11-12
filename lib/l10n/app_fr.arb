@@ -237,5 +237,9 @@
   "errSourceBusy": "{host} est occupé ; réessayez dans une minute.",
   "errSourceHttp": "{host} a renvoyé une erreur ({status}).",
   "errTimeout": "La connexion a pris trop de temps. Vérifiez votre connexion internet et réessayez.",
-  "errGeneric": "Une erreur s’est produite. Veuillez réessayer."
+  "errGeneric": "Une erreur s’est produite. Veuillez réessayer.",
+  "updateReady": "Illuminati {version} est prêt. Il sera installé à la fermeture de l’application.",
+  "updateReadyRestart": "Redémarrer",
+  "updateAvailable": "Illuminati {version} est disponible.",
+  "updateDownload": "Télécharger"
 }

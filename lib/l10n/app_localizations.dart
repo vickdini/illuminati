@@ -1454,6 +1454,30 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Something went wrong. Please try again.'**
   String get errGeneric;
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Illuminati {version} is ready. It will be installed when you close the app.'**
+  String updateReady(String version);
+
+  /// No description provided for @updateReadyRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart now'**
+  String get updateReadyRestart;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Illuminati {version} is available.'**
+  String updateAvailable(String version);
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get updateDownload;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

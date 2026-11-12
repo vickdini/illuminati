@@ -817,4 +817,20 @@ class L10nFr extends L10n {
 
   @override
   String get errGeneric => 'Une erreur s’est produite. Veuillez réessayer.';
+
+  @override
+  String updateReady(String version) {
+    return 'Illuminati $version est prêt. Il sera installé à la fermeture de l’application.';
+  }
+
+  @override
+  String get updateReadyRestart => 'Redémarrer';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Illuminati $version est disponible.';
+  }
+
+  @override
+  String get updateDownload => 'Télécharger';
 }

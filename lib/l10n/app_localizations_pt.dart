@@ -815,4 +815,20 @@ class L10nPt extends L10n {
 
   @override
   String get errGeneric => 'Algo deu errado. Tente novamente.';
+
+  @override
+  String updateReady(String version) {
+    return 'O Illuminati $version está pronto. Ele será instalado quando você fechar o app.';
+  }
+
+  @override
+  String get updateReadyRestart => 'Reiniciar agora';
+
+  @override
+  String updateAvailable(String version) {
+    return 'O Illuminati $version está disponível.';
+  }
+
+  @override
+  String get updateDownload => 'Baixar';
 }

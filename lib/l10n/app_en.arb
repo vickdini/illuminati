@@ -273,5 +273,11 @@
   "errSourceHttp": "{host} returned an error ({status}).",
   "@errSourceHttp": {"placeholders": {"host": {"type": "String"}, "status": {"type": "int"}}},
   "errTimeout": "The connection took too long. Check your internet connection and try again.",
-  "errGeneric": "Something went wrong. Please try again."
+  "errGeneric": "Something went wrong. Please try again.",
+  "updateReady": "Illuminati {version} is ready. It will be installed when you close the app.",
+  "@updateReady": {"placeholders": {"version": {"type": "String"}}},
+  "updateReadyRestart": "Restart now",
+  "updateAvailable": "Illuminati {version} is available.",
+  "@updateAvailable": {"placeholders": {"version": {"type": "String"}}},
+  "updateDownload": "Download"
 }

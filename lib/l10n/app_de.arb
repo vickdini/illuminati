@@ -237,5 +237,9 @@
   "errSourceBusy": "{host} ist ausgelastet; versuche es in einer Minute erneut.",
   "errSourceHttp": "{host} hat einen Fehler gemeldet ({status}).",
   "errTimeout": "Die Verbindung hat zu lange gedauert. Prüfe deine Internetverbindung und versuche es erneut.",
-  "errGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  "errGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "updateReady": "Illuminati {version} ist bereit und wird beim Schließen der App installiert.",
+  "updateReadyRestart": "Jetzt neu starten",
+  "updateAvailable": "Illuminati {version} ist verfügbar.",
+  "updateDownload": "Herunterladen"
 }

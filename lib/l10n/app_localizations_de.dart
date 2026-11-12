@@ -820,4 +820,20 @@ class L10nDe extends L10n {
   @override
   String get errGeneric =>
       'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
+
+  @override
+  String updateReady(String version) {
+    return 'Illuminati $version ist bereit und wird beim Schließen der App installiert.';
+  }
+
+  @override
+  String get updateReadyRestart => 'Jetzt neu starten';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Illuminati $version ist verfügbar.';
+  }
+
+  @override
+  String get updateDownload => 'Herunterladen';
 }

@@ -816,4 +816,20 @@ class L10nIt extends L10n {
 
   @override
   String get errGeneric => 'Qualcosa è andato storto. Riprova.';
+
+  @override
+  String updateReady(String version) {
+    return 'Illuminati $version è pronto. Verrà installato alla chiusura dell’app.';
+  }
+
+  @override
+  String get updateReadyRestart => 'Riavvia ora';
+
+  @override
+  String updateAvailable(String version) {
+    return 'È disponibile Illuminati $version.';
+  }
+
+  @override
+  String get updateDownload => 'Scarica';
 }

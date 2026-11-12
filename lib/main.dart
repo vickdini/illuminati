@@ -1,3 +1,5 @@
+import 'dart:ui' show AppExitResponse;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +11,7 @@ import 'services/library_service.dart';
 import 'services/lookup_service.dart';
 import 'services/settings_service.dart';
 import 'services/title_index.dart';
+import 'services/update_service.dart';
 import 'sources/book_source.dart';
 import 'sources/internet_archive.dart';
 import 'sources/standard_ebooks.dart';
@@ -50,6 +53,7 @@ Future<void> main() async {
         lookup: LookupService(),
         library: library,
         settings: settings,
+        updates: UpdateService(),
       ),
     ),
   );
@@ -62,6 +66,7 @@ class AppServices {
   final LookupService lookup;
   final LibraryService library;
   final SettingsService settings;
+  final UpdateService updates;
   const AppServices({
     required this.catalog,
     required this.sources,
@@ -69,6 +74,7 @@ class AppServices {
     required this.lookup,
     required this.library,
     required this.settings,
+    required this.updates,
   });
 }
 
@@ -84,15 +90,84 @@ class Services extends InheritedWidget {
   bool updateShouldNotify(Services oldWidget) => services != oldWidget.services;
 }
 
-class IlluminatiApp extends StatelessWidget {
+class IlluminatiApp extends StatefulWidget {
   final AppServices services;
   const IlluminatiApp({super.key, required this.services});
 
   static const seed = Color(0xFF6B4EA0); // deep violet
 
+  @override
+  State<IlluminatiApp> createState() => _IlluminatiAppState();
+}
+
+class _IlluminatiAppState extends State<IlluminatiApp> {
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+  late final AppLifecycleListener _lifecycle;
+  UpdateState _shown = UpdateState.idle;
+
+  UpdateService get _updates => widget.services.updates;
+
+  @override
+  void initState() {
+    super.initState();
+    _updates.addListener(_onUpdate);
+    // A downloaded update is installed when the app closes.
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async {
+        await _updates.installOnExit();
+        return AppExitResponse.exit;
+      },
+    );
+    // Let the catalog load first.
+    Future.delayed(const Duration(seconds: 3), _updates.run);
+  }
+
+  @override
+  void dispose() {
+    _updates.removeListener(_onUpdate);
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  void _onUpdate() {
+    final state = _updates.state, version = _updates.latestVersion;
+    final messenger = _messenger.currentState;
+    if (state == _shown || version == null || messenger == null) return;
+    _shown = state;
+    final l = L10n.of(messenger.context);
+    switch (state) {
+      case UpdateState.ready:
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l.updateReady(version)),
+            duration: const Duration(seconds: 15),
+            action: SnackBarAction(
+              label: l.updateReadyRestart,
+              onPressed: _updates.restartNow,
+            ),
+          ),
+        );
+      case UpdateState.available:
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l.updateAvailable(version)),
+            duration: const Duration(seconds: 15),
+            action: SnackBarAction(
+              label: l.updateDownload,
+              onPressed: _updates.openDownloadPage,
+            ),
+          ),
+        );
+      case UpdateState.idle ||
+          UpdateState.downloading ||
+          UpdateState.installing:
+        break;
+    }
+  }
+
   ThemeData _theme(Brightness b) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
+      seedColor: IlluminatiApp.seed,
       brightness: b,
       tertiary: const Color(0xFFC9A227), // gold accent
     );
@@ -109,12 +184,14 @@ class IlluminatiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final services = widget.services;
     return Services(
       services: services,
       child: ValueListenableBuilder<String>(
         valueListenable: services.settings.appLanguageListenable,
         builder: (context, language, _) => MaterialApp(
           title: 'Illuminati',
+          scaffoldMessengerKey: _messenger,
           locale: language.isEmpty ? null : Locale(language),
           supportedLocales: L10n.supportedLocales,
           localizationsDelegates: L10n.localizationsDelegates,
