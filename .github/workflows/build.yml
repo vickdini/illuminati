@@ -83,7 +83,8 @@ jobs:
 
   windows:
     needs: test
-    runs-on: windows-latest
+    # Visual Studio 2022; this Flutter version doesn't know newer ones.
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -91,7 +92,16 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      - run: flutter build windows --release
+      - name: flutter build windows --release
+        shell: pwsh
+        run: |
+          flutter build windows --release 2>&1 | Tee-Object build.log
+          if ($LASTEXITCODE -ne 0) {
+            # Also show the end of the output as an annotation on the run page.
+            $tail = (Get-Content build.log -Tail 40) -join '%0A'
+            Write-Output "::error title=flutter build windows failed::$tail"
+            exit 1
+          }
       - name: Package
         shell: pwsh
         run: |
