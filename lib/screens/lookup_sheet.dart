@@ -3,25 +3,26 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/lookup_service.dart';
 
+/// Translation targets, in alphabetical order by name.
 const translateLanguages = <(String, String)>[
+  ('ar', 'Arabic'),
+  ('zh', 'Chinese'),
+  ('nl', 'Dutch'),
   ('en', 'English'),
-  ('es', 'Spanish'),
   ('fr', 'French'),
   ('de', 'German'),
-  ('it', 'Italian'),
-  ('pt', 'Portuguese'),
-  ('nl', 'Dutch'),
-  ('ru', 'Russian'),
-  ('pl', 'Polish'),
-  ('sv', 'Swedish'),
   ('el', 'Greek'),
-  ('tr', 'Turkish'),
-  ('ar', 'Arabic'),
   ('he', 'Hebrew'),
   ('hi', 'Hindi'),
-  ('zh', 'Chinese'),
+  ('it', 'Italian'),
   ('ja', 'Japanese'),
   ('ko', 'Korean'),
+  ('pl', 'Polish'),
+  ('pt', 'Portuguese'),
+  ('ru', 'Russian'),
+  ('es', 'Spanish'),
+  ('sv', 'Swedish'),
+  ('tr', 'Turkish'),
 ];
 
 enum LookupMode { define, translate }
