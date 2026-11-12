@@ -1,0 +1,107 @@
+import 'dart:async';
+
+import 'package:http/http.dart' as http;
+
+import '../models/book.dart';
+import '../services/catalog_service.dart';
+
+/// A free-book catalog shown as an extra row on the home screen.
+/// (Project Gutenberg, the main catalog, is [CatalogService].)
+abstract class BookSource {
+  /// Stored in [Book.source].
+  String get id;
+  String get name;
+
+  /// One line shown under the row title.
+  String get tagline;
+
+  /// Whether this source has anything for the catalog language ('' = all)
+  /// and category subject ('' = none). Rows are hidden otherwise.
+  bool supports({required String language, required String subject});
+
+  /// The row's default contents (popular or recommended books).
+  Future<List<Book>> featured({required String language, required String subject});
+
+  Future<List<Book>> search(String query, {required String language, required String subject});
+
+  /// Fills in summary, subjects and the exact EPUB link.
+  Future<Book> details(Book book);
+
+  /// Copyright note shown on the book page.
+  String rightsNote(Book book);
+}
+
+class SourceException implements Exception {
+  final String message;
+
+  /// True when the service asked us to slow down (HTTP 429).
+  final bool busy;
+  SourceException(this.message, {this.busy = false});
+  @override
+  String toString() => message;
+}
+
+/// Shared HTTP GET with the app's User-Agent and a timeout.
+Future<http.Response> sourceGet(http.Client client, Uri uri,
+    {Duration timeout = const Duration(seconds: 30)}) async {
+  final res = await client
+      .get(uri, headers: {'User-Agent': CatalogService.userAgent})
+      .timeout(timeout);
+  if (res.statusCode == 429) {
+    throw SourceException('${uri.host} is busy; try again in a minute.', busy: true);
+  }
+  if (res.statusCode != 200) {
+    throw SourceException('${uri.host} returned an error (${res.statusCode}).');
+  }
+  return res;
+}
+
+/// All catalogs: Gutenberg (main) plus the extra sources, in row order.
+class SourceRegistry {
+  final CatalogService gutenberg;
+  final List<BookSource> extra;
+  SourceRegistry(this.gutenberg, this.extra);
+
+  BookSource? byId(String id) => extra.where((s) => s.id == id).firstOrNull;
+
+  String nameOf(Book book) =>
+      book.source == 'gutenberg' ? 'Project Gutenberg' : (byId(book.source)?.name ?? book.source);
+
+  Future<Book> details(Book book) {
+    if (book.source == 'gutenberg') return gutenberg.details(book);
+    final source = byId(book.source);
+    if (source == null) return Future.value(book);
+    return source.details(book);
+  }
+
+  String rightsNote(Book book) {
+    if (book.source == 'gutenberg') {
+      return 'From Project Gutenberg (ebook #${book.id}). This book is in the public '
+          'domain in the United States. Copyright terms differ between countries, '
+          'so check your local laws before downloading.';
+    }
+    return byId(book.source)?.rightsNote(book) ?? '';
+  }
+}
+
+/// Keeps each source's default row for a while, so opening the app or
+/// pulling to refresh doesn't hit small, volunteer-run sites every time.
+/// Failures are not cached.
+class FeaturedCache {
+  final Duration ttl;
+  FeaturedCache([this.ttl = const Duration(hours: 12)]);
+
+  final _entries = <String, (DateTime, List<Book>)>{};
+
+  Future<List<Book>> get(String key, Future<List<Book>> Function() load) async {
+    final hit = _entries[key];
+    if (hit != null && DateTime.now().difference(hit.$1) < ttl) return hit.$2;
+    final books = await load();
+    _entries[key] = (DateTime.now(), books);
+    return books;
+  }
+}
+
+/// Removes characters with special meaning in search query syntaxes.
+String plainQuery(String q) =>
+    q.replaceAll(RegExp(r'[+\-&|!(){}\[\]^"~*?:\\/]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();

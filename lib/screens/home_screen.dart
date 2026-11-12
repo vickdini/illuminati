@@ -7,6 +7,7 @@ import '../main.dart';
 import '../models/book.dart';
 import '../services/catalog_service.dart';
 import '../services/title_index.dart';
+import '../sources/book_source.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/book_cover.dart';
 import 'book_actions.dart';
@@ -60,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _category = 0;
   String _query = '';
   int _requestId = 0;
+
+  /// Bumped by pull-to-refresh so the source rows reload too.
+  int _rowsEpoch = 0;
 
   @override
   void didChangeDependencies() {
@@ -200,7 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: NotificationListener<ScrollNotification>(
         onNotification: _onScroll,
         child: RefreshIndicator(
-          onRefresh: _reload,
+          onRefresh: () {
+            setState(() => _rowsEpoch++);
+            return _reload();
+          },
           child: CustomScrollView(
             slivers: [
               // ---------- Your library ----------
@@ -293,6 +300,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              // ---------- Other free catalogs, one row each ----------
+              SliverToBoxAdapter(
+                child: Column(children: [
+                  for (final source in services.sources.extra)
+                    if (source.supports(
+                        language: services.settings.catalogLanguage,
+                        subject: _categories[_category].$2))
+                      _SourceRow(
+                        key: ValueKey('${source.id}-$_rowsEpoch'),
+                        source: source,
+                        query: _query,
+                        language: services.settings.catalogLanguage,
+                        subject: _categories[_category].$2,
+                        pad: pad,
+                      ),
+                ]),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(pad, 20, pad, 4),
+                sliver: SliverToBoxAdapter(
+                  child: _RowHeader(
+                    title: 'Project Gutenberg',
+                    subtitle: 'The largest free library: over 75,000 public-domain books',
+                  ),
+                ),
+              ),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(pad, 8, pad, 0),
                 sliver: SliverGrid(
@@ -357,10 +390,14 @@ class _HomeScreenState extends State<HomeScreen> {
       children: const [
         Text('Illuminati lets you find, download and read books that were never '
             'under copyright or whose copyright has expired.\n\n'
-            'The catalog comes from Project Gutenberg (gutenberg.org) through the '
-            'Gutendex API. These books are in the public domain in the United '
-            'States; copyright terms differ between countries, so check your local '
-            'laws before downloading.'),
+            'Books come from Project Gutenberg (gutenberg.org), Standard Ebooks '
+            '(standardebooks.org), Wikisource (wikisource.org, as EPUBs made by WS '
+            'Export) and the Internet Archive (archive.org). They are in the public '
+            'domain in the United States, except some Wikisource texts that are under '
+            'free licences. Copyright terms differ between countries, so check your '
+            'local laws before downloading.\n\n'
+            'Word definitions come from Wiktionary and translations from MyMemory; '
+            'the selected text is sent to those services.'),
       ],
     );
   }
@@ -536,6 +573,150 @@ class LibraryTile extends StatelessWidget {
     if (!context.mounted) return;
     if (choice == 'info') showBookDetails(context, entry.book);
     if (choice == 'remove') confirmRemove(context, entry.book);
+  }
+}
+
+class _RowHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _RowHeader({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+      Text(subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+    ]);
+  }
+}
+
+/// One extra catalog (Standard Ebooks, Wikisource, ...) as a horizontal row.
+/// Shows the source's featured books, or its results for the search box.
+class _SourceRow extends StatefulWidget {
+  final BookSource source;
+  final String query;
+  final String language;
+  final String subject;
+  final double pad;
+
+  const _SourceRow({
+    super.key,
+    required this.source,
+    required this.query,
+    required this.language,
+    required this.subject,
+    required this.pad,
+  });
+
+  @override
+  State<_SourceRow> createState() => _SourceRowState();
+}
+
+class _SourceRowState extends State<_SourceRow> {
+  late Future<List<Book>> _books;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(_SourceRow old) {
+    super.didUpdateWidget(old);
+    if (old.query != widget.query ||
+        old.language != widget.language ||
+        old.subject != widget.subject) {
+      _load();
+    }
+  }
+
+  void _load() {
+    final s = widget.source;
+    _books = widget.query.isEmpty
+        ? s.featured(language: widget.language, subject: widget.subject)
+        : s.search(widget.query, language: widget.language, subject: widget.subject);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const cardWidth = 136.0;
+    const rowHeight = 290.0;
+
+    Widget frame(Widget body) => Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.pad),
+              child: _RowHeader(title: widget.source.name, subtitle: widget.source.tagline),
+            ),
+            const SizedBox(height: 10),
+            body,
+          ]),
+        );
+
+    return FutureBuilder<List<Book>>(
+      future: _books,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return frame(SizedBox(
+            height: rowHeight,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: widget.pad),
+              itemCount: 8,
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              itemBuilder: (_, __) => Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  width: cardWidth,
+                  height: cardWidth * 1.5,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+            ),
+          ));
+        }
+        if (snap.hasError) {
+          final e = snap.error;
+          // A rate-limited service just sits this round out.
+          if (e is SourceException && e.busy) return const SizedBox.shrink();
+          return frame(Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.pad),
+            child: Row(children: [
+              Icon(Icons.cloud_off, size: 18, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Flexible(child: Text('Couldn’t reach ${widget.source.name}.')),
+              TextButton(onPressed: () => setState(_load), child: const Text('Try again')),
+            ]),
+          ));
+        }
+        final books = snap.data ?? const <Book>[];
+        if (books.isEmpty) return const SizedBox.shrink(); // nothing to offer here
+        return frame(SizedBox(
+          height: rowHeight,
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context)
+                .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: widget.pad),
+              itemCount: books.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              itemBuilder: (context, i) =>
+                  SizedBox(width: cardWidth, child: _CatalogCard(book: books[i])),
+            ),
+          ),
+        ));
+      },
+    );
   }
 }
 

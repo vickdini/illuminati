@@ -6,18 +6,29 @@ import 'services/library_service.dart';
 import 'services/lookup_service.dart';
 import 'services/settings_service.dart';
 import 'services/title_index.dart';
+import 'sources/book_source.dart';
+import 'sources/internet_archive.dart';
+import 'sources/standard_ebooks.dart';
+import 'sources/wikisource.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = SettingsService();
   final catalog = CatalogService();
-  final library = LibraryService(catalog);
+  // Extra catalogs, shown as rows above the Gutenberg grid, in this order.
+  final sources = SourceRegistry(catalog, [
+    StandardEbooksSource(),
+    WikisourceSource(),
+    InternetArchiveSource(),
+  ]);
+  final library = LibraryService(sources);
   await Future.wait([settings.init(), library.init()]);
   // Download/refresh the offline title index in the background.
   final titleIndex = TitleIndex()..load();
   runApp(IlluminatiApp(
     services: AppServices(
       catalog: catalog,
+      sources: sources,
       titleIndex: titleIndex,
       lookup: LookupService(),
       library: library,
@@ -28,12 +39,14 @@ Future<void> main() async {
 
 class AppServices {
   final CatalogService catalog;
+  final SourceRegistry sources;
   final TitleIndex titleIndex;
   final LookupService lookup;
   final LibraryService library;
   final SettingsService settings;
   const AppServices({
     required this.catalog,
+    required this.sources,
     required this.titleIndex,
     required this.lookup,
     required this.library,

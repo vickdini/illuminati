@@ -1,5 +1,7 @@
-/// A book from the free catalog (Project Gutenberg).
+/// A free book from one of the catalogs (see `lib/sources/`).
 class Book {
+  /// Library key. Gutenberg books use their ebook number; books from other
+  /// sources use [stableId] of their source key (always negative).
   final int id;
   final String title;
   final List<String> authors;
@@ -9,6 +11,15 @@ class Book {
   final List<String> languages;
   final int downloadCount;
   final String? summary;
+
+  /// Which catalog the book comes from, e.g. `gutenberg`, `standardebooks`.
+  final String source;
+
+  /// The book's key in its source (a path, page title or identifier).
+  final String? sourceId;
+
+  /// The book's page on the source's website.
+  final String? webUrl;
 
   const Book({
     required this.id,
@@ -20,15 +31,55 @@ class Book {
     this.languages = const [],
     this.downloadCount = 0,
     this.summary,
+    this.source = 'gutenberg',
+    this.sourceId,
+    this.webUrl,
   });
+
+  /// A negative id derived from a source key (64-bit FNV-1a, 52 bits kept),
+  /// so it never collides with Gutenberg ebook numbers.
+  static int stableId(String source, String key) {
+    var h = 0xcbf29ce484222325;
+    for (final c in '$source:$key'.codeUnits) {
+      h ^= c;
+      h *= 0x100000001b3;
+    }
+    return -((h & 0xFFFFFFFFFFFFF) + 1);
+  }
+
+  Book copyWith({
+    String? title,
+    List<String>? authors,
+    String? coverUrl,
+    String? epubUrl,
+    List<String>? subjects,
+    List<String>? languages,
+    int? downloadCount,
+    String? summary,
+  }) =>
+      Book(
+        id: id,
+        title: title ?? this.title,
+        authors: authors ?? this.authors,
+        coverUrl: coverUrl ?? this.coverUrl,
+        epubUrl: epubUrl ?? this.epubUrl,
+        subjects: subjects ?? this.subjects,
+        languages: languages ?? this.languages,
+        downloadCount: downloadCount ?? this.downloadCount,
+        summary: summary ?? this.summary,
+        source: source,
+        sourceId: sourceId,
+        webUrl: webUrl,
+      );
 
   String get authorLine =>
       authors.isEmpty ? 'Unknown author' : authors.join(', ');
 
   /// Gutenberg lists authors as "Austen, Jane"; show them as "Jane Austen".
   static String prettyName(String raw) {
-    // Drop lifespans such as ", 1694-1778" or ", 1812-1870 [Contributor]".
-    raw = raw.replaceFirst(RegExp(r',\s*(BCE?\s*)?\d.*$'), '');
+    // Drop lifespans such as ", 1694-1778", ", ca. 1571-1631" or
+    // ", 1812-1870 [Contributor]".
+    raw = raw.replaceFirst(RegExp(r',\s*(ca\.?\s*|fl\.?\s*|b\.\s*|d\.\s*|BCE?\s*)?\d.*$'), '');
     final parts = raw.split(', ');
     if (parts.length == 2 && !parts[1].contains(RegExp(r'\d'))) {
       return '${parts[1]} ${parts[0]}'.trim();
@@ -46,9 +97,15 @@ class Book {
         'languages': languages,
         'downloadCount': downloadCount,
         'summary': summary,
+        'source': source,
+        'sourceId': sourceId,
+        'webUrl': webUrl,
       };
 
   factory Book.fromJson(Map<String, dynamic> j) => Book(
+        source: j['source'] as String? ?? 'gutenberg',
+        sourceId: j['sourceId'] as String?,
+        webUrl: j['webUrl'] as String?,
         id: j['id'] as int,
         title: j['title'] as String,
         authors: (j['authors'] as List).cast<String>(),

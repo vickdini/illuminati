@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,12 +8,13 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../models/book.dart';
+import '../sources/book_source.dart';
 import 'catalog_service.dart';
 
 /// Owns the user's downloaded books: files on disk plus `library.json`.
 class LibraryService extends ChangeNotifier {
-  final CatalogService catalog;
-  LibraryService(this.catalog);
+  final SourceRegistry sources;
+  LibraryService(this.sources);
 
   late Directory _root;
   final Map<int, LibraryEntry> _entries = {};
@@ -94,7 +96,7 @@ class LibraryService extends ChangeNotifier {
       final previousUrl = book.epubUrl;
       if (replace || (book.summary == null && book.subjects.isEmpty)) {
         try {
-          book = await catalog.details(book);
+          book = await sources.details(book);
         } catch (e) {
           if (replace) rethrow;
           // Fall back to the standard EPUB URL from the listing.
@@ -109,8 +111,20 @@ class LibraryService extends ChangeNotifier {
       }
       final req = http.Request('GET', Uri.parse(url))
         ..headers['User-Agent'] = CatalogService.userAgent;
-      final res = await client.send(req).timeout(const Duration(seconds: 40));
+      // Generous: Wikisource EPUBs are built on demand before the first byte.
+      final http.StreamedResponse res;
+      try {
+        res = await client.send(req).timeout(const Duration(seconds: 150));
+      } on TimeoutException {
+        throw CatalogException(book.source == 'wikisource'
+            ? _wikisourceTooBig
+            : 'The download took too long. Check your connection and try again.');
+      }
       if (res.statusCode != 200) {
+        // WS Export gives up on very long works (e.g. multi-volume novels).
+        if (book.source == 'wikisource' && res.statusCode >= 500) {
+          throw CatalogException(_wikisourceTooBig);
+        }
         throw CatalogException('Download failed (${res.statusCode}).');
       }
       final total = res.contentLength;
@@ -174,6 +188,10 @@ class LibraryService extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  static const _wikisourceTooBig =
+      'Wikisource could not prepare this book: it is too long for their EPUB '
+      'service. Try one of its volumes, or look for it in another catalog.';
 
   Future<void> remove(int id) async {
     final e = _entries.remove(id);

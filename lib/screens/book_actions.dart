@@ -82,7 +82,7 @@ class _BookDetailsState extends State<_BookDetails> {
     // Search results only carry title and author; fetch the full record.
     if (book.summary == null && book.subjects.isEmpty) {
       _loadingDetails = true;
-      Services.of(context).catalog.details(book).then((full) {
+      Services.of(context).sources.details(book).then((full) {
         if (mounted) setState(() => book = full);
       }).catchError((_) {}).whenComplete(() {
         if (mounted) setState(() => _loadingDetails = false);
@@ -158,7 +158,9 @@ class _BookDetailsState extends State<_BookDetails> {
                       Text(book.authorLine, style: theme.textTheme.titleSmall),
                       const SizedBox(height: 12),
                       Wrap(spacing: 8, runSpacing: 4, children: [
-                        _Tag(Icons.public, 'Public domain'),
+                        _Tag(Icons.local_library_outlined, Services.of(context).sources.nameOf(book)),
+                        _Tag(Icons.public,
+                            book.source == 'wikisource' ? 'Free to read' : 'Public domain'),
                         if (book.languages.isNotEmpty)
                           _Tag(Icons.translate, book.languages.join(', ').toUpperCase()),
                         if (book.downloadCount > 0)
@@ -169,6 +171,7 @@ class _BookDetailsState extends State<_BookDetails> {
                       action,
                       if (entry != null &&
                           !downloading &&
+                          entry.book.source == 'gutenberg' &&
                           (entry.book.epubUrl ?? '').endsWith('.noimages'))
                         TextButton.icon(
                           icon: const Icon(Icons.image_outlined),
@@ -227,9 +230,7 @@ class _BookDetailsState extends State<_BookDetails> {
             ],
             const SizedBox(height: 24),
             Text(
-              'From Project Gutenberg (ebook #${book.id}). This book is in the public '
-              'domain in the United States. Copyright terms differ between countries, '
-              'so check your local laws before downloading.',
+              Services.of(context).sources.rightsNote(book),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
