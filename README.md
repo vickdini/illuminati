@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="docs/cover.png" width="100%"
+       alt="Illuminati: every free classic, beautifully read. The home screen with your library and free catalogs, and the reader with a highlighted passage. For Windows, macOS, Linux and Android.">
+</p>
+
 # Illuminati
 
 An e-reader for Windows, macOS, Linux and Android. It works like the Kindle app,
