@@ -822,7 +822,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
       child: Center(
         child: ExcludeFocus(child: isLast
             ? Text('— The End —',
-                style: TextStyle(color: rt.foreground, fontSize: 16, fontFamily: 'Georgia'))
+                style: TextStyle(
+                    color: rt.foreground,
+                    fontSize: 16,
+                    fontFamily: _services.settings.font.families.first,
+                    fontFamilyFallback: _services.settings.font.families.skip(1).toList()))
             : OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(foregroundColor: rt.foreground),
                 icon: const Icon(Icons.arrow_forward),

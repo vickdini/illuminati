@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../models/annotation.dart';
 import '../services/epub_parser.dart';
+import '../services/settings_service.dart' show readingSerif;
 
 /// Side panel: table of contents, bookmarks, and highlights & notes.
 class ReaderDrawer extends StatelessWidget {
@@ -154,7 +155,10 @@ class ReaderDrawer extends StatelessWidget {
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontFamily: 'Georgia', fontStyle: FontStyle.italic)),
+                              ?.copyWith(
+                                  fontFamily: 'Literata',
+                                  fontFamilyFallback: readingSerif,
+                                  fontStyle: FontStyle.italic)),
                       if (h.hasNote) ...[
                         const SizedBox(height: 6),
                         Text(h.note, style: theme.textTheme.bodyMedium),

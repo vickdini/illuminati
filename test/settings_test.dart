@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:illuminati/services/settings_service.dart';
 
@@ -52,5 +54,20 @@ void main() {
     s.resetDisplay();
     expect((s.font, s.warmth, s.catalogLanguage), (ReaderFont.serif, 0.0, 'es'));
     await Future<void>.delayed(const Duration(milliseconds: 500)); // let the save timer run
+  });
+
+  test('every reading font is bundled, with all files and its licence', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    for (final f in ReaderFont.values) {
+      final family = f.families.first;
+      expect(pubspec, contains('- family: $family'), reason: '$family must be declared');
+    }
+    final assets = RegExp(r'- asset: (assets/fonts/\S+)').allMatches(pubspec).map((m) => m[1]!);
+    expect(assets.length, 16, reason: '4 families x regular, bold, italic, bold italic');
+    for (final a in assets) {
+      expect(File(a).existsSync(), isTrue, reason: '$a is missing');
+      expect(File('${File(a).parent.path}/OFL.txt').existsSync(), isTrue);
+    }
+    expect(readingSerif.first, 'Literata');
   });
 }

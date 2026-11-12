@@ -68,9 +68,43 @@ flutter:
   assets:
     - assets/icon/app_icon.png
     - assets/fonts/opendyslexic/OFL.txt
+    - assets/fonts/literata/OFL.txt
+    - assets/fonts/ebgaramond/OFL.txt
+    - assets/fonts/atkinson/OFL.txt
 
-  # OpenDyslexic (https://opendyslexic.org), SIL Open Font License 1.1.
+  # Reading fonts, bundled so books look the same on every device. All are
+  # under the SIL Open Font License 1.1 (see each folder's OFL.txt).
   fonts:
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/literata/Literata-Regular.ttf
+        - asset: assets/fonts/literata/Literata-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/literata/Literata-Italic.ttf
+          style: italic
+        - asset: assets/fonts/literata/Literata-BoldItalic.ttf
+          weight: 700
+          style: italic
+    - family: EB Garamond
+      fonts:
+        - asset: assets/fonts/ebgaramond/EBGaramond-Regular.ttf
+        - asset: assets/fonts/ebgaramond/EBGaramond-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/ebgaramond/EBGaramond-Italic.ttf
+          style: italic
+        - asset: assets/fonts/ebgaramond/EBGaramond-BoldItalic.ttf
+          weight: 700
+          style: italic
+    - family: Atkinson Hyperlegible
+      fonts:
+        - asset: assets/fonts/atkinson/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/atkinson/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/atkinson/AtkinsonHyperlegible-Italic.ttf
+          style: italic
+        - asset: assets/fonts/atkinson/AtkinsonHyperlegible-BoldItalic.ttf
+          weight: 700
+          style: italic
     - family: OpenDyslexic
       fonts:
         - asset: assets/fonts/opendyslexic/OpenDyslexic-Regular.otf

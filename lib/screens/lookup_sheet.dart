@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../services/lookup_service.dart';
+import '../services/settings_service.dart' show readingSerif;
 
 /// Translation targets, in alphabetical order by name.
 const translateLanguages = <(String, String)>[
@@ -114,7 +115,8 @@ class _LookupSheetState extends State<_LookupSheet> {
                     ? LookupService.cleanWord(widget.text)
                     : 'Translation',
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  fontFamily: 'Georgia',
+                  fontFamily: 'Literata',
+                  fontFamilyFallback: readingSerif,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

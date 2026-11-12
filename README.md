@@ -42,8 +42,10 @@ copyright has expired.
   - **Images**: illustrations display inline; click or tap one to zoom.
 
   - **Display & accessibility** (the sliders button on the home screen, or the
-    text button in the reader): Serif, Sans-serif or the dyslexia-friendly
-    **OpenDyslexic** font (bundled, SIL Open Font License); text size, line and
+    text button in the reader): four bundled reading fonts, so books look the
+    same on every device: **Literata** (default), **EB Garamond**, **Atkinson
+    Hyperlegible** and the dyslexia-friendly **OpenDyslexic** (all SIL Open Font
+    License; see `assets/fonts/`); text size, line and
     letter spacing; justified or ragged-right text; margins and line width; and
     **brightness** and **warmth** filters that apply to the whole app.
 

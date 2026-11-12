@@ -29,30 +29,45 @@ extension ReaderThemeColors on ReaderTheme {
       };
 }
 
-/// The reading typeface. [dyslexic] is OpenDyslexic, bundled with the app.
-enum ReaderFont { serif, sans, dyslexic }
+/// The reading typeface. All four are bundled with the app (SIL Open Font
+/// License), so books look the same on every device. The enum names are
+/// stored in settings: [serif] is Literata and [sans] is Atkinson Hyperlegible.
+enum ReaderFont { serif, garamond, sans, dyslexic }
+
+/// System fonts used only for characters a bundled font lacks (e.g. Chinese,
+/// or Greek in Atkinson Hyperlegible).
+const _serifFallback = ['Noto Serif', 'Georgia', 'Times New Roman', 'DejaVu Serif', 'serif'];
+const _sansFallback = ['Noto Sans', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'DejaVu Sans', 'sans-serif'];
 
 extension ReaderFontInfo on ReaderFont {
   String get label => switch (this) {
-        ReaderFont.serif => 'Serif',
-        ReaderFont.sans => 'Sans-serif',
+        ReaderFont.serif => 'Literata',
+        ReaderFont.garamond => 'EB Garamond',
+        ReaderFont.sans => 'Atkinson',
         ReaderFont.dyslexic => 'OpenDyslexic',
       };
 
-  /// Font family followed by fallbacks for each platform.
+  String get description => switch (this) {
+        ReaderFont.serif => 'Literata: a serif designed for reading on screens.',
+        ReaderFont.garamond => 'EB Garamond: a classic book face, based on 16th-century type.',
+        ReaderFont.sans => 'Atkinson Hyperlegible: a sans-serif designed by the Braille '
+            'Institute so that similar letters are easy to tell apart.',
+        ReaderFont.dyslexic => 'OpenDyslexic has weighted letter bottoms to help keep letters '
+            'from flipping or swapping. Many readers also find extra letter spacing and '
+            'unjustified text easier.',
+      };
+
+  /// The bundled family, then system fallbacks for missing characters.
   List<String> get families => switch (this) {
-        ReaderFont.serif => const [
-            'Georgia', 'Cambria', 'Times New Roman', 'Noto Serif', 'DejaVu Serif',
-            'Liberation Serif', 'serif',
-          ],
-        ReaderFont.sans => const [
-            'Segoe UI', 'Helvetica Neue', 'Roboto', 'Noto Sans', 'DejaVu Sans',
-            'Liberation Sans', 'sans-serif',
-          ],
-        // OpenDyslexic covers Latin scripts; others fall back to the system.
-        ReaderFont.dyslexic => const ['OpenDyslexic', 'Segoe UI', 'Roboto', 'Noto Sans'],
+        ReaderFont.serif => const ['Literata', ..._serifFallback],
+        ReaderFont.garamond => const ['EB Garamond', 'Literata', ..._serifFallback],
+        ReaderFont.sans => const ['Atkinson Hyperlegible', ..._sansFallback],
+        ReaderFont.dyslexic => const ['OpenDyslexic', ..._sansFallback],
       };
 }
+
+/// Literata with fallbacks, for reading-style text outside the book view.
+const readingSerif = ['Literata', ..._serifFallback];
 
 /// Reader preferences, display and accessibility settings, and a few
 /// remembered choices, saved to `settings.json`.

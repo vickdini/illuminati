@@ -125,25 +125,23 @@ class _DisplaySettings extends StatelessWidget {
             for (final f in ReaderFont.values)
               ButtonSegment(
                 value: f,
+                // Each name in its own typeface.
                 label: Text(f.label,
-                    style: f == ReaderFont.dyslexic
-                        ? const TextStyle(fontFamily: 'OpenDyslexic', fontSize: 12)
-                        : null),
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                    style: TextStyle(
+                        fontFamily: f.families.first,
+                        fontSize: f == ReaderFont.dyslexic ? 12 : 14)),
               ),
           ],
           selected: {s.font},
           onSelectionChanged: (v) => s.update((x) => x.font = v.first),
         ),
-        if (s.font == ReaderFont.dyslexic)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              'OpenDyslexic has weighted letter bottoms to help keep letters from '
-              'flipping or swapping. Many readers also find extra letter spacing '
-              'and unjustified text easier.',
-              style: theme.textTheme.bodySmall,
-            ),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(s.font.description, style: theme.textTheme.bodySmall),
+        ),
         slider(
           label: 'Text size',
           value: '${s.fontSize.round()}',

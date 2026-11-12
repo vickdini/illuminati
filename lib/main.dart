@@ -15,10 +15,17 @@ import 'sources/wikisource.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Shown under About -> View licenses.
+  // Bundled fonts' licences, shown under About -> View licenses.
   LicenseRegistry.addLicense(() async* {
-    yield LicenseEntryWithLineBreaks(
-        ['OpenDyslexic'], await rootBundle.loadString('assets/fonts/opendyslexic/OFL.txt'));
+    for (final (name, folder) in const [
+      ('Literata', 'literata'),
+      ('EB Garamond', 'ebgaramond'),
+      ('Atkinson Hyperlegible', 'atkinson'),
+      ('OpenDyslexic', 'opendyslexic'),
+    ]) {
+      yield LicenseEntryWithLineBreaks(
+          [name], await rootBundle.loadString('assets/fonts/$folder/OFL.txt'));
+    }
   });
   final settings = SettingsService();
   final catalog = CatalogService();
