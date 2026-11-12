@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'services/catalog_service.dart';
@@ -13,6 +15,11 @@ import 'sources/wikisource.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Shown under About -> View licenses.
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+        ['OpenDyslexic'], await rootBundle.loadString('assets/fonts/opendyslexic/OFL.txt'));
+  });
   final settings = SettingsService();
   final catalog = CatalogService();
   // Extra catalogs, shown as rows above the Gutenberg grid, in this order.
@@ -99,6 +106,16 @@ class IlluminatiApp extends StatelessWidget {
         theme: _theme(Brightness.light),
         darkTheme: _theme(Brightness.dark),
         home: const HomeScreen(),
+        // Brightness and warmth (Display & accessibility) tint everything.
+        builder: (context, child) => ListenableBuilder(
+          listenable: services.settings,
+          builder: (context, _) => services.settings.hasScreenFilter
+              ? ColorFiltered(
+                  colorFilter: ColorFilter.matrix(services.settings.screenFilter),
+                  child: child,
+                )
+              : child!,
+        ),
       ),
     );
   }

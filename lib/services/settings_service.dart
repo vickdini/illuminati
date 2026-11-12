@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -28,13 +29,63 @@ extension ReaderThemeColors on ReaderTheme {
       };
 }
 
-/// Reader preferences and the catalog language, saved to `settings.json`.
+/// The reading typeface. [dyslexic] is OpenDyslexic, bundled with the app.
+enum ReaderFont { serif, sans, dyslexic }
+
+extension ReaderFontInfo on ReaderFont {
+  String get label => switch (this) {
+        ReaderFont.serif => 'Serif',
+        ReaderFont.sans => 'Sans-serif',
+        ReaderFont.dyslexic => 'OpenDyslexic',
+      };
+
+  /// Font family followed by fallbacks for each platform.
+  List<String> get families => switch (this) {
+        ReaderFont.serif => const [
+            'Georgia', 'Cambria', 'Times New Roman', 'Noto Serif', 'DejaVu Serif',
+            'Liberation Serif', 'serif',
+          ],
+        ReaderFont.sans => const [
+            'Segoe UI', 'Helvetica Neue', 'Roboto', 'Noto Sans', 'DejaVu Sans',
+            'Liberation Sans', 'sans-serif',
+          ],
+        // OpenDyslexic covers Latin scripts; others fall back to the system.
+        ReaderFont.dyslexic => const ['OpenDyslexic', 'Segoe UI', 'Roboto', 'Noto Sans'],
+      };
+}
+
+/// Reader preferences, display and accessibility settings, and a few
+/// remembered choices, saved to `settings.json`.
 class SettingsService extends ChangeNotifier {
+  // ---------- Reading text ----------
   double fontSize = 19;
   double lineHeight = 1.6;
-  bool serif = true;
+  ReaderFont font = ReaderFont.serif;
   ReaderTheme readerTheme = ReaderTheme.light;
 
+  /// Space added between letters, as a fraction of the font size
+  /// (-0.08..0.15). Negative tightens wide fonts such as OpenDyslexic.
+  double letterSpacing = 0;
+
+  /// Justified text (even right edge). Ragged-right is easier for many
+  /// dyslexic readers, as it avoids uneven gaps between words.
+  bool justify = true;
+
+  // ---------- Page layout ----------
+  /// Minimum space on each side of the text, in logical pixels.
+  double margin = 24;
+
+  /// Maximum width of the text column, in logical pixels.
+  double lineWidth = 680;
+
+  // ---------- Screen (whole app) ----------
+  /// 1 = normal; lower dims everything drawn by the app (0.3..1).
+  double brightness = 1;
+
+  /// 0 = neutral; higher removes blue light for a warmer, amber look (0..1).
+  double warmth = 0;
+
+  // ---------- Remembered choices ----------
   /// Gutenberg language code for the catalog, or '' for all languages.
   String catalogLanguage = 'en';
 
@@ -58,40 +109,113 @@ class SettingsService extends ChangeNotifier {
     _file = File(p.join(dir.path, 'settings.json'));
     if (await _file!.exists()) {
       try {
-        final j = jsonDecode(await _file!.readAsString()) as Map<String, dynamic>;
-        fontSize = (j['fontSize'] as num?)?.toDouble() ?? fontSize;
-        lineHeight = (j['lineHeight'] as num?)?.toDouble() ?? lineHeight;
-        serif = j['serif'] as bool? ?? serif;
-        readerTheme = ReaderTheme.values.firstWhere(
-            (t) => t.name == j['readerTheme'],
-            orElse: () => readerTheme);
-        catalogLanguage = j['catalogLanguage'] as String? ?? catalogLanguage;
-        readingWpm = (j['readingWpm'] as num?)?.toDouble() ?? readingWpm;
-        translateTo = j['translateTo'] as String? ?? translateTo;
-        highlightColor = HighlightColor.values.firstWhere(
-            (c) => c.name == j['highlightColor'],
-            orElse: () => highlightColor);
-        libraryView = j['libraryView'] as String? ?? libraryView;
-        librarySort = LibrarySort.values.firstWhere((x) => x.name == j['librarySort'],
-            orElse: () => librarySort);
+        fromJson(jsonDecode(await _file!.readAsString()) as Map<String, dynamic>);
       } catch (_) {}
     }
   }
 
+  void fromJson(Map<String, dynamic> j) {
+    double num_(String k, double fallback) => (j[k] as num?)?.toDouble() ?? fallback;
+    T enum_<T extends Enum>(List<T> values, String k, T fallback) =>
+        values.firstWhere((v) => v.name == j[k], orElse: () => fallback);
+
+    fontSize = num_('fontSize', fontSize);
+    lineHeight = num_('lineHeight', lineHeight);
+    // Before OpenDyslexic, the font was a serif/sans switch.
+    font = j.containsKey('font')
+        ? enum_(ReaderFont.values, 'font', font)
+        : (j['serif'] == false ? ReaderFont.sans : ReaderFont.serif);
+    readerTheme = enum_(ReaderTheme.values, 'readerTheme', readerTheme);
+    letterSpacing = num_('letterSpacing', letterSpacing).clamp(-0.08, 0.15);
+    justify = j['justify'] as bool? ?? justify;
+    margin = num_('margin', margin).clamp(8.0, 120.0);
+    lineWidth = num_('lineWidth', lineWidth).clamp(360.0, 1200.0);
+    brightness = num_('brightness', brightness).clamp(0.3, 1.0);
+    warmth = num_('warmth', warmth).clamp(0.0, 1.0);
+    catalogLanguage = j['catalogLanguage'] as String? ?? catalogLanguage;
+    readingWpm = num_('readingWpm', readingWpm);
+    translateTo = j['translateTo'] as String? ?? translateTo;
+    highlightColor = enum_(HighlightColor.values, 'highlightColor', highlightColor);
+    libraryView = j['libraryView'] as String? ?? libraryView;
+    librarySort = enum_(LibrarySort.values, 'librarySort', librarySort);
+  }
+
+  Map<String, dynamic> toJson() => {
+        'fontSize': fontSize,
+        'lineHeight': lineHeight,
+        'font': font.name,
+        'readerTheme': readerTheme.name,
+        'letterSpacing': letterSpacing,
+        'justify': justify,
+        'margin': margin,
+        'lineWidth': lineWidth,
+        'brightness': brightness,
+        'warmth': warmth,
+        'catalogLanguage': catalogLanguage,
+        'readingWpm': readingWpm,
+        'translateTo': translateTo,
+        'highlightColor': highlightColor.name,
+        'libraryView': libraryView,
+        'librarySort': librarySort.name,
+      };
+
+  /// Puts the text and screen settings back to their defaults.
+  void resetDisplay() => update((s) {
+        final d = SettingsService._defaults();
+        s
+          ..fontSize = d.fontSize
+          ..lineHeight = d.lineHeight
+          ..font = d.font
+          ..letterSpacing = d.letterSpacing
+          ..justify = d.justify
+          ..margin = d.margin
+          ..lineWidth = d.lineWidth
+          ..brightness = d.brightness
+          ..warmth = d.warmth;
+      });
+
+  SettingsService();
+  SettingsService._defaults();
+
+  Timer? _saveTimer;
+  Future<void> _saving = Future.value();
+
   void update(void Function(SettingsService s) change) {
     change(this);
     notifyListeners();
-    _file?.writeAsString(jsonEncode({
-      'fontSize': fontSize,
-      'lineHeight': lineHeight,
-      'serif': serif,
-      'readerTheme': readerTheme.name,
-      'catalogLanguage': catalogLanguage,
-      'readingWpm': readingWpm,
-      'translateTo': translateTo,
-      'highlightColor': highlightColor.name,
-      'libraryView': libraryView,
-      'librarySort': librarySort.name,
-    }));
+    // Sliders send many changes per second: save once they settle, one
+    // write at a time.
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 400), () {
+      final file = _file;
+      if (file == null) return;
+      final json = jsonEncode(toJson());
+      _saving = _saving.then((_) async {
+        final tmp = File('${file.path}.tmp');
+        await tmp.writeAsString(json);
+        await tmp.rename(file.path);
+      }).catchError((Object e) {
+        debugPrint('Could not save settings: $e');
+      });
+    });
+  }
+
+  // ---------- Screen filter ----------
+
+  /// Whether [screenFilter] changes anything.
+  bool get hasScreenFilter => brightness < 0.999 || warmth > 0.001;
+
+  /// A color matrix that dims (brightness) and warms (cuts blue, a little
+  /// green) everything the app draws, like a night-light.
+  List<double> get screenFilter {
+    final b = brightness;
+    final g = b * (1 - 0.18 * warmth);
+    final bl = b * (1 - 0.62 * warmth);
+    return [
+      b, 0, 0, 0, 0, //
+      0, g, 0, 0, 0,
+      0, 0, bl, 0, 0,
+      0, 0, 0, 1, 0,
+    ];
   }
 }

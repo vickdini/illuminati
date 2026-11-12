@@ -5,15 +5,6 @@ import '../models/annotation.dart';
 import '../services/epub_parser.dart';
 import '../services/settings_service.dart';
 
-const serifFonts = [
-  'Georgia', 'Cambria', 'Times New Roman', 'Noto Serif', 'DejaVu Serif',
-  'Liberation Serif', 'serif',
-];
-const sansFonts = [
-  'Segoe UI', 'Helvetica Neue', 'Roboto', 'Noto Sans', 'DejaVu Sans',
-  'Liberation Sans', 'sans-serif',
-];
-
 /// What the reader does with a text selection.
 class SelectionActions {
   final void Function(int start, int end, String text) highlight;
@@ -70,13 +61,16 @@ class BlockView extends StatelessWidget {
   Widget build(BuildContext context) {
     final rt = settings.readerTheme;
     final size = settings.fontSize;
-    final fonts = settings.serif ? serifFonts : sansFonts;
+    final fonts = settings.font.families;
     final base = TextStyle(
       color: rt.foreground,
       fontSize: size,
       height: settings.lineHeight,
       fontFamily: fonts.first,
       fontFamilyFallback: fonts.skip(1).toList(),
+      letterSpacing: settings.letterSpacing == 0 ? null : size * settings.letterSpacing,
+      // Wider word gaps go with wider letter spacing, so words stay distinct.
+      wordSpacing: settings.letterSpacing > 0 ? size * settings.letterSpacing * 1.5 : null,
     );
 
     if (block.type == BlockType.image) return _image(context, base);
@@ -120,7 +114,11 @@ class BlockView extends StatelessWidget {
           TextAlign.start,
           EdgeInsets.only(bottom: size * 0.6),
         ),
-      _ => (base, TextAlign.justify, EdgeInsets.only(bottom: size * 0.35)),
+      _ => (
+          base,
+          settings.justify ? TextAlign.justify : TextAlign.start,
+          EdgeInsets.only(bottom: size * 0.35),
+        ),
     };
 
     final indent = block.type == BlockType.paragraph;

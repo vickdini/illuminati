@@ -10,6 +10,7 @@ import '../services/title_index.dart';
 import '../sources/book_source.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/book_cover.dart';
+import '../widgets/display_settings.dart';
 import '../widgets/library_tile.dart';
 import 'book_actions.dart';
 import 'library_screen.dart';
@@ -194,6 +195,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontFamily: 'serif', fontWeight: FontWeight.w600, letterSpacing: 0.5)),
         ]),
         actions: [
+          IconButton(
+            tooltip: 'Display & accessibility',
+            icon: const Icon(Icons.tune),
+            onPressed: () => showDisplaySettings(context, services.settings),
+          ),
           IconButton(
             tooltip: 'About',
             icon: const Icon(Icons.info_outline),

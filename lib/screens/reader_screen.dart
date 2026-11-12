@@ -13,6 +13,7 @@ import '../services/book_search.dart';
 import '../services/epub_parser.dart';
 import '../services/settings_service.dart';
 import '../widgets/block_view.dart';
+import '../widgets/display_settings.dart';
 import 'lookup_sheet.dart';
 import 'note_dialog.dart';
 import 'reader_panels.dart';
@@ -673,7 +674,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
     return LayoutBuilder(builder: (context, box) {
       _viewport = box.maxHeight - 40;
       _width = box.maxWidth;
-      final hPad = box.maxWidth > 760 ? (box.maxWidth - 680) / 2 : 24.0;
+      // Text column: at most the chosen line width, and always leaving the
+      // chosen margin on each side.
+      final available = box.maxWidth - 2 * settings.margin;
+      final column = available < settings.lineWidth ? available : settings.lineWidth;
+      final hPad = column < 200 ? settings.margin : (box.maxWidth - column) / 2;
       return Stack(children: [
         Positioned.fill(
           bottom: 28,
@@ -960,74 +965,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  void _showDisplaySettings() {
-    final settings = _services.settings;
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      constraints: const BoxConstraints(maxWidth: 560),
-      builder: (ctx) => ListenableBuilder(
-        listenable: settings,
-        builder: (ctx, _) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Theme'),
-              const SizedBox(height: 8),
-              SegmentedButton<ReaderTheme>(
-                segments: [
-                  for (final t in ReaderTheme.values)
-                    ButtonSegment(value: t, label: Text(t.label)),
-                ],
-                selected: {settings.readerTheme},
-                onSelectionChanged: (s) => settings.update((x) => x.readerTheme = s.first),
-              ),
-              const SizedBox(height: 20),
-              const Text('Font'),
-              const SizedBox(height: 8),
-              SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: true, label: Text('Serif')),
-                  ButtonSegment(value: false, label: Text('Sans-serif')),
-                ],
-                selected: {settings.serif},
-                onSelectionChanged: (s) => settings.update((x) => x.serif = s.first),
-              ),
-              const SizedBox(height: 20),
-              Text('Text size  ${settings.fontSize.round()}'),
-              Row(children: [
-                const Icon(Icons.text_decrease, size: 18),
-                Expanded(
-                  child: Slider(
-                    value: settings.fontSize,
-                    min: 14,
-                    max: 32,
-                    divisions: 18,
-                    onChanged: (v) => settings.update((x) => x.fontSize = v),
-                  ),
-                ),
-                const Icon(Icons.text_increase, size: 22),
-              ]),
-              Text('Line spacing  ${settings.lineHeight.toStringAsFixed(1)}'),
-              Slider(
-                value: settings.lineHeight,
-                min: 1.2,
-                max: 2.2,
-                divisions: 10,
-                onChanged: (v) => settings.update((x) => x.lineHeight = v),
-              ),
-              const SizedBox(height: 4),
-              Text('Reading speed: about ${_wpm.round()} words per minute '
-                  '(learned as you read).',
-                  style: Theme.of(ctx).textTheme.bodySmall),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  void _showDisplaySettings() =>
+      showDisplaySettings(context, _services.settings, readingWpm: _wpm);
 }
 
 /// Search box with live results; returns (query, hits, chosen index).

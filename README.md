@@ -41,6 +41,12 @@ copyright has expired.
   - **Search inside the book** (Ctrl+F; F3 for the next match), ignoring case and accents.
   - **Images**: illustrations display inline; click or tap one to zoom.
 
+  - **Display & accessibility** (the sliders button on the home screen, or the
+    text button in the reader): Serif, Sans-serif or the dyslexia-friendly
+    **OpenDyslexic** font (bundled, SIL Open Font License); text size, line and
+    letter spacing; justified or ragged-right text; margins and line width; and
+    **brightness** and **warmth** filters that apply to the whole app.
+
   Keyboard: ←/→ or PageUp/PageDown turn pages, ↑/↓ scroll, Ctrl+F search,
   Ctrl+B bookmark, Esc closes search/toolbar or goes back.
 
@@ -68,7 +74,8 @@ build on this machine.
 | Highlights, notes, bookmarks (`notes/<id>.json`, re-anchored by text) | `lib/models/annotation.dart` |
 | Dictionary (Wiktionary) and translation (MyMemory) | `lib/services/lookup_service.dart` |
 | In-book search | `lib/services/book_search.dart` |
-| Reader preferences (`settings.json`) | `lib/services/settings_service.dart` |
+| Reader, display and accessibility settings (`settings.json`) | `lib/services/settings_service.dart` |
+| Display & accessibility panel | `lib/widgets/display_settings.dart` |
 | Home screen (library row + catalog grid) | `lib/screens/home_screen.dart` |
 | Reader | `lib/screens/reader_screen.dart` |
 

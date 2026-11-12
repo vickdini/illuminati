@@ -67,6 +67,20 @@ flutter:
 
   assets:
     - assets/icon/app_icon.png
+    - assets/fonts/opendyslexic/OFL.txt
+
+  # OpenDyslexic (https://opendyslexic.org), SIL Open Font License 1.1.
+  fonts:
+    - family: OpenDyslexic
+      fonts:
+        - asset: assets/fonts/opendyslexic/OpenDyslexic-Regular.otf
+        - asset: assets/fonts/opendyslexic/OpenDyslexic-Bold.otf
+          weight: 700
+        - asset: assets/fonts/opendyslexic/OpenDyslexic-Italic.otf
+          style: italic
+        - asset: assets/fonts/opendyslexic/OpenDyslexic-Bold-Italic.otf
+          weight: 700
+          style: italic
 
   # To add assets to your application, add an assets section, like this:
   # assets:
