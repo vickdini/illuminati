@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 
 import '../models/book.dart';
+import 'app_error.dart';
+export 'app_error.dart';
 
 class CatalogPage {
   final List<Book> books;
@@ -18,15 +20,18 @@ class CatalogPage {
 /// `s.word` matches a subject, `l.xx` restricts the language.
 class CatalogService {
   static const site = 'https://www.gutenberg.org';
+
   /// Sent with every request. Wikimedia (Wikisource) asks apps to say who
   /// they are and how to reach the maintainers, so it includes the project's
   /// repository.
-  static const userAgent = 'Illuminati/1.0 (https://github.com/vickdini/illuminati)';
+  static const userAgent =
+      'Illuminati/1.0 (https://github.com/vickdini/illuminati)';
 
   final http.Client _client;
   CatalogService([http.Client? client]) : _client = client ?? http.Client();
 
-  static String coverUrlFor(int id) => '$site/cache/epub/$id/pg$id.cover.medium.jpg';
+  static String coverUrlFor(int id) =>
+      '$site/cache/epub/$id/pg$id.cover.medium.jpg';
   static String epubUrlFor(int id) => '$site/ebooks/$id.epub3.images';
 
   Future<XmlDocument> _getXml(Uri uri) async {
@@ -34,7 +39,7 @@ class CatalogService {
         .get(uri, headers: {'User-Agent': userAgent})
         .timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) {
-      throw CatalogException('The catalog returned an error (${res.statusCode}).');
+      throw CatalogException(ErrorCode.catalogHttp, status: res.statusCode);
     }
     return XmlDocument.parse(utf8.decode(res.bodyBytes, allowMalformed: true));
   }
@@ -59,10 +64,12 @@ class CatalogService {
           ...subject.split(' ').map((w) => 's.$w'),
         if (language != null && language.isNotEmpty) 'l.$language',
       ];
-      uri = Uri.parse('$site/ebooks/search.opds/').replace(queryParameters: {
-        if (terms.isNotEmpty) 'query': terms.join(' '),
-        'sort_order': 'downloads',
-      });
+      uri = Uri.parse('$site/ebooks/search.opds/').replace(
+        queryParameters: {
+          if (terms.isNotEmpty) 'query': terms.join(' '),
+          'sort_order': 'downloads',
+        },
+      );
     }
 
     final feed = await _getXml(uri);
@@ -70,16 +77,18 @@ class CatalogService {
     for (final e in feed.findAllElements('entry')) {
       final id = _ebookId(e.getElement('id')?.innerText);
       if (id == null) continue; // navigation entries such as "Subjects"
-      books.add(Book(
-        id: id,
-        title: _cleanTitle(e.getElement('title')?.innerText ?? 'Untitled'),
-        authors: [
-          if ((e.getElement('content')?.innerText.trim() ?? '').isNotEmpty)
-            e.getElement('content')!.innerText.trim(),
-        ],
-        coverUrl: coverUrlFor(id),
-        epubUrl: epubUrlFor(id),
-      ));
+      books.add(
+        Book(
+          id: id,
+          title: _cleanTitle(e.getElement('title')?.innerText ?? 'Untitled'),
+          authors: [
+            if ((e.getElement('content')?.innerText.trim() ?? '').isNotEmpty)
+              e.getElement('content')!.innerText.trim(),
+          ],
+          coverUrl: coverUrlFor(id),
+          epubUrl: epubUrlFor(id),
+        ),
+      );
     }
 
     final next = feed
@@ -88,7 +97,10 @@ class CatalogService {
         .map((l) => l.getAttribute('href'))
         .whereType<String>()
         .firstOrNull;
-    return CatalogPage(books, next == null ? null : Uri.parse(site).resolve(next).toString());
+    return CatalogPage(
+      books,
+      next == null ? null : Uri.parse(site).resolve(next).toString(),
+    );
   }
 
   /// Fetches the full record for one book: summary, subjects, language,
@@ -184,9 +196,6 @@ class CatalogService {
       t.trim().replaceFirst(RegExp(r'\s*\((' + _languageNames + r')\)$'), '');
 }
 
-class CatalogException implements Exception {
-  final String message;
-  CatalogException(this.message);
-  @override
-  String toString() => message;
+class CatalogException extends AppException {
+  const CatalogException(super.code, {super.status, super.host, super.detail});
 }

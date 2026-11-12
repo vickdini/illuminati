@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../l10n/l10n_helpers.dart';
 import '../models/book.dart';
 import '../widgets/book_cover.dart';
 import 'collection_actions.dart';
@@ -14,24 +15,29 @@ void openReader(BuildContext context, LibraryEntry entry) {
     return;
   }
   Services.of(context).library.markOpened(entry.book.id);
-  Navigator.of(context).push(MaterialPageRoute(
-    builder: (_) => ReaderScreen(entry: entry),
-  ));
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => ReaderScreen(entry: entry)));
 }
 
 Future<void> startDownload(BuildContext context, Book book) async {
   final messenger = ScaffoldMessenger.of(context);
+  final t = L10n.of(context);
   try {
     await Services.of(context).library.download(book);
-    messenger.showSnackBar(SnackBar(
-      content: Text('“${book.title}” added to your library'),
-      duration: const Duration(seconds: 3),
-    ));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(t.addedToLibrary(book.title)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   } catch (e) {
-    messenger.showSnackBar(SnackBar(
-      content: Text('Could not download “${book.title}”: $e'),
-      backgroundColor: Colors.red.shade700,
-    ));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(t.couldNotDownload(book.title, errorText(t, e))),
+        backgroundColor: Colors.red.shade700,
+      ),
+    );
   }
 }
 
@@ -39,13 +45,17 @@ Future<void> confirmRemove(BuildContext context, Book book) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Remove from library?'),
-      content: Text('“${book.title}” will be removed from your library and shelves, '
-          'with its notes, highlights and bookmarks. You can download it again '
-          'at any time.'),
+      title: Text(L10n.of(context).removeFromLibraryQuestion),
+      content: Text(L10n.of(context).removeFromLibraryBody(book.title)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(L10n.of(context).cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(L10n.of(context).remove),
+        ),
       ],
     ),
   );
@@ -89,11 +99,15 @@ class _BookDetailsState extends State<_BookDetails> {
     // Search results only carry title and author; fetch the full record.
     if (book.summary == null && book.subjects.isEmpty) {
       _loadingDetails = true;
-      Services.of(context).sources.details(book).then((full) {
-        if (mounted) setState(() => book = full);
-      }).catchError((_) {}).whenComplete(() {
-        if (mounted) setState(() => _loadingDetails = false);
-      });
+      Services.of(context).sources
+          .details(book)
+          .then((full) {
+            if (mounted) setState(() => book = full);
+          })
+          .catchError((_) {})
+          .whenComplete(() {
+            if (mounted) setState(() => _loadingDetails = false);
+          });
     }
   }
 
@@ -113,7 +127,11 @@ class _BookDetailsState extends State<_BookDetails> {
         if (entry != null && entry.isDownloaded) {
           action = FilledButton.icon(
             icon: const Icon(Icons.menu_book),
-            label: Text(entry.progress > 0 ? 'Continue reading' : 'Read now'),
+            label: Text(
+              entry.progress > 0
+                  ? L10n.of(context).continueReading
+                  : L10n.of(context).readNow,
+            ),
             onPressed: () {
               Navigator.pop(context);
               openReader(context, entry);
@@ -125,22 +143,29 @@ class _BookDetailsState extends State<_BookDetails> {
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, value: progress, color: theme.colorScheme.onPrimary),
+                strokeWidth: 2,
+                value: progress,
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
-            label: Text(progress == null
-                ? 'Downloading…'
-                : 'Downloading ${(progress * 100).round()}%'),
+            label: Text(
+              progress == null
+                  ? L10n.of(context).downloading
+                  : L10n.of(
+                      context,
+                    ).downloadingPercent((progress * 100).round()),
+            ),
             onPressed: null,
           );
         } else if (book.epubUrl == null) {
-          action = const FilledButton(
+          action = FilledButton(
             onPressed: null,
-            child: Text('No e-book edition'),
+            child: Text(L10n.of(context).noEbookEdition),
           );
         } else {
           action = FilledButton.icon(
             icon: const Icon(Icons.download),
-            label: const Text('Download free'),
+            label: Text(L10n.of(context).downloadFree),
             onPressed: () => startDownload(context, book),
           );
         }
@@ -152,28 +177,57 @@ class _BookDetailsState extends State<_BookDetails> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                BookCover(book: book, localPath: entry?.coverPath, width: 120, height: 180),
+                BookCover(
+                  book: book,
+                  localPath: entry?.coverPath,
+                  width: 120,
+                  height: 180,
+                ),
                 const SizedBox(width: 20),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(book.title,
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        book.title,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(height: 6),
-                      Text(book.authorLine, style: theme.textTheme.titleSmall),
+                      Text(
+                        authorLine(L10n.of(context), book),
+                        style: theme.textTheme.titleSmall,
+                      ),
                       const SizedBox(height: 12),
-                      Wrap(spacing: 8, runSpacing: 4, children: [
-                        _Tag(Icons.local_library_outlined, Services.of(context).sources.nameOf(book)),
-                        _Tag(Icons.public,
-                            book.source == 'wikisource' ? 'Free to read' : 'Public domain'),
-                        if (book.languages.isNotEmpty)
-                          _Tag(Icons.translate, book.languages.join(', ').toUpperCase()),
-                        if (book.downloadCount > 0)
-                          _Tag(Icons.download_done,
-                              '${_compact(book.downloadCount)} downloads'),
-                      ]),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _Tag(
+                            Icons.local_library_outlined,
+                            Services.of(context).sources.nameOf(book),
+                          ),
+                          _Tag(
+                            Icons.public,
+                            book.source == 'wikisource'
+                                ? L10n.of(context).freeToRead
+                                : L10n.of(context).publicDomain,
+                          ),
+                          if (book.languages.isNotEmpty)
+                            _Tag(
+                              Icons.translate,
+                              book.languages.join(', ').toUpperCase(),
+                            ),
+                          if (book.downloadCount > 0)
+                            _Tag(
+                              Icons.download_done,
+                              L10n.of(
+                                context,
+                              ).downloadsCount(_compact(book.downloadCount)),
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       action,
                       if (entry != null &&
@@ -182,15 +236,21 @@ class _BookDetailsState extends State<_BookDetails> {
                           (entry.book.epubUrl ?? '').endsWith('.noimages'))
                         TextButton.icon(
                           icon: const Icon(Icons.image_outlined),
-                          label: const Text('Get illustrated edition'),
+                          label: Text(L10n.of(context).getIllustratedEdition),
                           onPressed: () async {
                             final messenger = ScaffoldMessenger.of(context);
+                            final t = L10n.of(context);
                             try {
                               await library.download(entry.book, replace: true);
-                              messenger.showSnackBar(const SnackBar(
-                                  content: Text('Illustrated edition downloaded')));
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(t.illustratedDownloaded),
+                                ),
+                              );
                             } catch (e) {
-                              messenger.showSnackBar(SnackBar(content: Text('$e')));
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(errorText(t, e))),
+                              );
                             }
                           },
                         ),
@@ -199,13 +259,13 @@ class _BookDetailsState extends State<_BookDetails> {
                       if (entry != null && entry.isDownloaded && !downloading)
                         TextButton.icon(
                           icon: const Icon(Icons.cloud_off_outlined),
-                          label: const Text('Remove download'),
+                          label: Text(L10n.of(context).removeDownload),
                           onPressed: () => removeDownload(context, entry),
                         ),
                       if (entry != null && !downloading)
                         TextButton.icon(
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text('Remove from library'),
+                          label: Text(L10n.of(context).removeFromLibrary),
                           onPressed: () async {
                             await confirmRemove(context, book);
                             if (context.mounted && !library.has(book.id)) {
@@ -225,29 +285,41 @@ class _BookDetailsState extends State<_BookDetails> {
               ),
             if (book.summary != null) ...[
               const SizedBox(height: 24),
-              Text('About this book', style: theme.textTheme.titleMedium),
+              Text(
+                L10n.of(context).aboutThisBook,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
-              Text(book.summary!, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
+              Text(
+                book.summary!,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
             ],
             if (book.subjects.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text('Subjects', style: theme.textTheme.titleMedium),
+              Text(
+                L10n.of(context).subjects,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: [
                   for (final s in book.subjects.take(12))
-                    Chip(label: Text(s, style: theme.textTheme.labelSmall),
-                        visualDensity: VisualDensity.compact),
+                    Chip(
+                      label: Text(s, style: theme.textTheme.labelSmall),
+                      visualDensity: VisualDensity.compact,
+                    ),
                 ],
               ),
             ],
             const SizedBox(height: 24),
             Text(
-              Services.of(context).sources.rightsNote(book),
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              rightsNote(L10n.of(context), book),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         );
@@ -274,36 +346,53 @@ class _CollectionButtons extends StatelessWidget {
     final library = Services.of(context).library;
     final status = entry?.status ?? ReadingStatus.none;
     final shelves = entry == null ? const [] : library.shelvesOf(book.id);
-    return Wrap(spacing: 8, runSpacing: 8, children: [
-      FilterChip(
-        avatar: Icon(status == ReadingStatus.wantToRead ? Icons.bookmark : Icons.bookmark_border,
-            size: 18),
-        showCheckmark: false,
-        label: const Text('Want to read'),
-        selected: status == ReadingStatus.wantToRead,
-        onSelected: (on) =>
-            library.setStatus(book, on ? ReadingStatus.wantToRead : ReadingStatus.none),
-      ),
-      FilterChip(
-        avatar: Icon(
-            status == ReadingStatus.finished ? Icons.check_circle : Icons.check_circle_outline,
-            size: 18),
-        showCheckmark: false,
-        label: const Text('Finished'),
-        selected: status == ReadingStatus.finished,
-        onSelected: (on) =>
-            library.setStatus(book, on ? ReadingStatus.finished : ReadingStatus.none),
-      ),
-      ActionChip(
-        avatar: const Icon(Icons.collections_bookmark_outlined, size: 18),
-        label: Text(shelves.isEmpty
-            ? 'Add to shelf'
-            : shelves.length == 1
-                ? 'On “${shelves.first.name}”'
-                : 'On ${shelves.length} shelves'),
-        onPressed: () => showShelfPicker(context, book),
-      ),
-    ]);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilterChip(
+          avatar: Icon(
+            status == ReadingStatus.wantToRead
+                ? Icons.bookmark
+                : Icons.bookmark_border,
+            size: 18,
+          ),
+          showCheckmark: false,
+          label: Text(L10n.of(context).wantToRead),
+          selected: status == ReadingStatus.wantToRead,
+          onSelected: (on) => library.setStatus(
+            book,
+            on ? ReadingStatus.wantToRead : ReadingStatus.none,
+          ),
+        ),
+        FilterChip(
+          avatar: Icon(
+            status == ReadingStatus.finished
+                ? Icons.check_circle
+                : Icons.check_circle_outline,
+            size: 18,
+          ),
+          showCheckmark: false,
+          label: Text(L10n.of(context).finished),
+          selected: status == ReadingStatus.finished,
+          onSelected: (on) => library.setStatus(
+            book,
+            on ? ReadingStatus.finished : ReadingStatus.none,
+          ),
+        ),
+        ActionChip(
+          avatar: const Icon(Icons.collections_bookmark_outlined, size: 18),
+          label: Text(
+            shelves.isEmpty
+                ? L10n.of(context).addToShelf
+                : shelves.length == 1
+                ? L10n.of(context).onShelf(shelves.first.name)
+                : L10n.of(context).onShelves(shelves.length),
+          ),
+          onPressed: () => showShelfPicker(context, book),
+        ),
+      ],
+    );
   }
 }
 
@@ -315,10 +404,16 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 14, color: c),
-      const SizedBox(width: 4),
-      Text(text, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: c)),
-    ]);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: c),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: c),
+        ),
+      ],
+    );
   }
 }

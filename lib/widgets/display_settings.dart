@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_helpers.dart';
 import '../services/settings_service.dart';
 
 /// Display & accessibility settings, shared by the reader and the home
 /// screen. [readingWpm], when given, is shown as an informational line.
-void showDisplaySettings(BuildContext context, SettingsService settings, {double? readingWpm}) {
+void showDisplaySettings(
+  BuildContext context,
+  SettingsService settings, {
+  double? readingWpm,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -31,7 +36,11 @@ class _DisplaySettings extends StatelessWidget {
   final SettingsService settings;
   final ScrollController scroll;
   final double? readingWpm;
-  const _DisplaySettings({required this.settings, required this.scroll, this.readingWpm});
+  const _DisplaySettings({
+    required this.settings,
+    required this.scroll,
+    this.readingWpm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +48,14 @@ class _DisplaySettings extends StatelessWidget {
     final s = settings;
 
     Widget section(String title) => Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 4),
-          child: Text(title,
-              style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
-        );
+      padding: const EdgeInsets.only(top: 20, bottom: 4),
+      child: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
 
     Widget slider({
       required String label,
@@ -54,16 +67,20 @@ class _DisplaySettings extends StatelessWidget {
       required ValueChanged<double> onChanged,
       IconData? lowIcon,
       IconData? highIcon,
-    }) =>
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(children: [
+    }) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
               Expanded(child: Text(label)),
               Text(value, style: theme.textTheme.labelMedium),
-            ]),
+            ],
           ),
-          Row(children: [
+        ),
+        Row(
+          children: [
             if (lowIcon != null) Icon(lowIcon, size: 18),
             Expanded(
               child: Slider(
@@ -76,15 +93,35 @@ class _DisplaySettings extends StatelessWidget {
               ),
             ),
             if (highIcon != null) Icon(highIcon, size: 22),
-          ]),
-        ]);
+          ],
+        ),
+      ],
+    );
 
     final fonts = s.font.families;
+    final l = L10n.of(context);
     return ListView(
       controller: scroll,
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       children: [
-        Text('Display & accessibility', style: theme.textTheme.titleLarge),
+        Text(l.displayAccessibility, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.language, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(l.appLanguage)),
+            DropdownButton<String>(
+              value: s.appLanguage,
+              items: [
+                DropdownMenuItem(value: '', child: Text(l.sameAsDevice)),
+                for (final (code, name) in appLanguages)
+                  DropdownMenuItem(value: code, child: Text(name)),
+              ],
+              onChanged: (v) => s.update((x) => x.appLanguage = v ?? ''),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
 
         // Live preview of the reading text.
@@ -96,8 +133,7 @@ class _DisplaySettings extends StatelessWidget {
             border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
           child: Text(
-            'It was the best of times, it was the worst of times; it was the age '
-            'of wisdom, it was the age of foolishness.',
+            l.previewText,
             textAlign: s.justify ? TextAlign.justify : TextAlign.start,
             style: TextStyle(
               color: s.readerTheme.foreground,
@@ -106,15 +142,18 @@ class _DisplaySettings extends StatelessWidget {
               fontFamily: fonts.first,
               fontFamilyFallback: fonts.skip(1).toList(),
               letterSpacing: s.fontSize * s.letterSpacing,
-              wordSpacing: s.letterSpacing > 0 ? s.fontSize * s.letterSpacing * 1.5 : null,
+              wordSpacing: s.letterSpacing > 0
+                  ? s.fontSize * s.letterSpacing * 1.5
+                  : null,
             ),
           ),
         ),
 
-        section('Text'),
+        section(l.sectionText),
         SegmentedButton<ReaderTheme>(
           segments: [
-            for (final t in ReaderTheme.values) ButtonSegment(value: t, label: Text(t.label)),
+            for (final t in ReaderTheme.values)
+              ButtonSegment(value: t, label: Text(themeLabel(l, t))),
           ],
           selected: {s.readerTheme},
           onSelectionChanged: (v) => s.update((x) => x.readerTheme = v.first),
@@ -125,14 +164,17 @@ class _DisplaySettings extends StatelessWidget {
             for (final f in ReaderFont.values)
               ButtonSegment(
                 value: f,
-                // Each name in its own typeface.
-                label: Text(f.label,
+                // Each name in its own typeface, shrunk to fit if needed
+                // (OpenDyslexic is very wide).
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    f.label,
                     maxLines: 1,
-                    overflow: TextOverflow.fade,
                     softWrap: false,
-                    style: TextStyle(
-                        fontFamily: f.families.first,
-                        fontSize: f == ReaderFont.dyslexic ? 12 : 14)),
+                    style: TextStyle(fontFamily: f.families.first, fontSize: 14),
+                  ),
+                ),
               ),
           ],
           selected: {s.font},
@@ -140,10 +182,13 @@ class _DisplaySettings extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Text(s.font.description, style: theme.textTheme.bodySmall),
+          child: Text(
+            fontDescription(l, s.font),
+            style: theme.textTheme.bodySmall,
+          ),
         ),
         slider(
-          label: 'Text size',
+          label: l.textSize,
           value: '${s.fontSize.round()}',
           current: s.fontSize,
           min: 14,
@@ -154,7 +199,7 @@ class _DisplaySettings extends StatelessWidget {
           onChanged: (v) => s.update((x) => x.fontSize = v),
         ),
         slider(
-          label: 'Line spacing',
+          label: l.lineSpacing,
           value: s.lineHeight.toStringAsFixed(1),
           current: s.lineHeight,
           min: 1.2,
@@ -163,9 +208,9 @@ class _DisplaySettings extends StatelessWidget {
           onChanged: (v) => s.update((x) => x.lineHeight = v),
         ),
         slider(
-          label: 'Letter spacing',
+          label: l.letterSpacing,
           value: s.letterSpacing.abs() < 0.005
-              ? 'Normal'
+              ? l.normal
               : '${s.letterSpacing > 0 ? '+' : '−'}${(s.letterSpacing.abs() * 100).round()}%',
           current: s.letterSpacing,
           min: -0.08,
@@ -175,15 +220,15 @@ class _DisplaySettings extends StatelessWidget {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Justify text'),
-          subtitle: const Text('Even right edge. Turn off for even spacing between words.'),
+          title: Text(l.justifyText),
+          subtitle: Text(l.justifySubtitle),
           value: s.justify,
           onChanged: (v) => s.update((x) => x.justify = v),
         ),
 
-        section('Page'),
+        section(l.sectionPage),
         slider(
-          label: 'Margins',
+          label: l.margins,
           value: '${s.margin.round()} px',
           current: s.margin,
           min: 8,
@@ -192,7 +237,7 @@ class _DisplaySettings extends StatelessWidget {
           onChanged: (v) => s.update((x) => x.margin = v),
         ),
         slider(
-          label: 'Line width',
+          label: l.lineWidth,
           value: '${s.lineWidth.round()} px',
           current: s.lineWidth,
           min: 360,
@@ -200,13 +245,11 @@ class _DisplaySettings extends StatelessWidget {
           divisions: 21,
           onChanged: (v) => s.update((x) => x.lineWidth = v),
         ),
-        Text('Shorter lines are easier to follow; the text column is never '
-            'wider than the screen minus the margins.',
-            style: theme.textTheme.bodySmall),
+        Text(l.lineWidthHint, style: theme.textTheme.bodySmall),
 
-        section('Screen'),
+        section(l.sectionScreen),
         slider(
-          label: 'Brightness',
+          label: l.brightness,
           value: '${(s.brightness * 100).round()}%',
           current: s.brightness,
           min: 0.3,
@@ -217,8 +260,8 @@ class _DisplaySettings extends StatelessWidget {
           onChanged: (v) => s.update((x) => x.brightness = v),
         ),
         slider(
-          label: 'Warmth',
-          value: s.warmth == 0 ? 'Off' : '${(s.warmth * 100).round()}%',
+          label: l.warmth,
+          value: s.warmth == 0 ? l.off : '${(s.warmth * 100).round()}%',
           current: s.warmth,
           min: 0,
           max: 1,
@@ -227,22 +270,21 @@ class _DisplaySettings extends StatelessWidget {
           highIcon: Icons.nightlight_outlined,
           onChanged: (v) => s.update((x) => x.warmth = v),
         ),
-        Text('Brightness and warmth apply to the whole app, on top of your '
-            'device’s own settings. Warmth reduces blue light, like a night light.',
-            style: theme.textTheme.bodySmall),
+        Text(l.screenHint, style: theme.textTheme.bodySmall),
 
         if (readingWpm != null) ...[
           const SizedBox(height: 16),
-          Text('Reading speed: about ${readingWpm!.round()} words per minute '
-              '(learned as you read).',
-              style: theme.textTheme.bodySmall),
+          Text(
+            l.readingSpeed(readingWpm!.round()),
+            style: theme.textTheme.bodySmall,
+          ),
         ],
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
           child: OutlinedButton.icon(
             icon: const Icon(Icons.restart_alt),
-            label: const Text('Reset to defaults'),
+            label: Text(l.resetDefaults),
             onPressed: s.resetDisplay,
           ),
         ),

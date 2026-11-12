@@ -21,17 +21,24 @@ class IndexEntry {
   final String authorKey;
   final String subjectKey;
 
-  const IndexEntry(this.id, this.title, this.authors, this.languages,
-      this.titleKey, this.authorKey, this.subjectKey);
+  const IndexEntry(
+    this.id,
+    this.title,
+    this.authors,
+    this.languages,
+    this.titleKey,
+    this.authorKey,
+    this.subjectKey,
+  );
 
   Book toBook() => Book(
-        id: id,
-        title: title,
-        authors: authors,
-        languages: languages,
-        coverUrl: CatalogService.coverUrlFor(id),
-        epubUrl: CatalogService.epubUrlFor(id),
-      );
+    id: id,
+    title: title,
+    authors: authors,
+    languages: languages,
+    coverUrl: CatalogService.coverUrlFor(id),
+    epubUrl: CatalogService.epubUrlFor(id),
+  );
 }
 
 /// A local, offline copy of the whole Project Gutenberg catalog
@@ -39,7 +46,8 @@ class IndexEntry {
 /// matches whole words, it finds any part of a title or author name and
 /// ignores accents: "miserab" and "misérable" both find "Los miserables".
 class TitleIndex {
-  static const catalogUrl = '${CatalogService.site}/cache/epub/feeds/pg_catalog.csv.gz';
+  static const catalogUrl =
+      '${CatalogService.site}/cache/epub/feeds/pg_catalog.csv.gz';
   static const maxAge = Duration(days: 7);
 
   List<IndexEntry>? _entries;
@@ -67,13 +75,17 @@ class TitleIndex {
       final dir = await getApplicationSupportDirectory();
       final file = File(p.join(dir.path, 'pg_catalog.csv.gz'));
       final exists = await file.exists();
-      final stale = !exists ||
+      final stale =
+          !exists ||
           DateTime.now().difference(await file.lastModified()) > maxAge;
       if (stale) {
         try {
-          final res = await http.get(Uri.parse(catalogUrl),
-              headers: {'User-Agent': CatalogService.userAgent}).timeout(
-              const Duration(seconds: 90));
+          final res = await http
+              .get(
+                Uri.parse(catalogUrl),
+                headers: {'User-Agent': CatalogService.userAgent},
+              )
+              .timeout(const Duration(seconds: 90));
           if (res.statusCode == 200 && res.bodyBytes.length > 100000) {
             final tmp = File('${file.path}.tmp');
             await tmp.writeAsBytes(res.bodyBytes);
@@ -94,17 +106,26 @@ class TitleIndex {
   /// Books whose title or author contains every word of [query].
   /// Best matches first: title starts with the query, then the query appears
   /// at the start of a title word, then anywhere in the title, then author.
-  List<Book> search(String query, {String? language, String? subject, int limit = 300}) {
+  List<Book> search(
+    String query, {
+    String? language,
+    String? subject,
+    int limit = 300,
+  }) {
     final entries = _entries;
     if (entries == null) return const [];
     final q = fold(query).trim();
     final words = q.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     if (words.isEmpty) return const [];
-    final subjectWords = fold(subject ?? '').split(' ').where((w) => w.isNotEmpty).toList();
+    final subjectWords = fold(
+      subject ?? '',
+    ).split(' ').where((w) => w.isNotEmpty).toList();
 
     final scored = <(int, IndexEntry)>[];
     for (final e in entries) {
-      if (language != null && language.isNotEmpty && !e.languages.contains(language)) {
+      if (language != null &&
+          language.isNotEmpty &&
+          !e.languages.contains(language)) {
         continue;
       }
       if (!subjectWords.every(e.subjectKey.contains)) continue;
@@ -155,10 +176,12 @@ class TitleIndex {
 // ---------------------------------------------------------------------------
 // Text folding: lowercase and strip accents so "Misérables" == "miserables".
 
-const _accented = 'àáâãäåāăąçćčďđèéêëēėęěìíîïīįñńňòóôõöøōőùúûüūůűųýÿźżžśšşţťŕřłğ';
-const _plain    = 'aaaaaaaaacccddeeeeeeeeiiiiiinnnooooooooouuuuuuuuyyzzzsssttrrlg';
+const _accented =
+    'àáâãäåāăąçćčďđèéêëēėęěìíîïīįñńňòóôõöøōőùúûüūůűųýÿźżžśšşţťŕřłğ';
+const _plain = 'aaaaaaaaacccddeeeeeeeeiiiiiinnnooooooooouuuuuuuuyyzzzsssttrrlg';
 final _foldMap = {
-  for (var i = 0; i < _accented.length; i++) _accented.codeUnitAt(i): _plain.codeUnitAt(i),
+  for (var i = 0; i < _accented.length; i++)
+    _accented.codeUnitAt(i): _plain.codeUnitAt(i),
 };
 
 String fold(String s) {
@@ -224,25 +247,35 @@ List<IndexEntry> parseCatalogCsv(String csv) {
     final id = int.tryParse(r[0]);
     if (id == null) continue;
     final title = r[3].replaceAll(RegExp(r'\s+'), ' ').trim();
-    final langs = r[4].split(';').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final langs = r[4]
+        .split(';')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
 
     // "Hugo, Victor, 1802-1885; J. A. R. [Translator]" -> main authors only.
-    final people = r[5].split(';').map((a) => a.trim()).where((a) => a.isNotEmpty).toList();
+    final people = r[5]
+        .split(';')
+        .map((a) => a.trim())
+        .where((a) => a.isNotEmpty)
+        .toList();
     final main = people.where((a) => !a.contains('[')).toList();
     final authors = (main.isEmpty ? people.take(1) : main)
         .map((a) => Book.prettyName(a.replaceAll(RegExp(r'\s*\[.*?\]'), '')))
         .where((a) => a.isNotEmpty)
         .toList();
 
-    out.add(IndexEntry(
-      id,
-      title,
-      authors,
-      langs,
-      fold(title),
-      fold(r[5]),
-      fold('${r[6]} ${r.length > 8 ? r[8] : ''}'),
-    ));
+    out.add(
+      IndexEntry(
+        id,
+        title,
+        authors,
+        langs,
+        fold(title),
+        fold(r[5]),
+        fold('${r[6]} ${r.length > 8 ? r[8] : ''}'),
+      ),
+    );
   }
   return out;
 }

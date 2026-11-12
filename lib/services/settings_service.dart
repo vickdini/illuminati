@@ -13,20 +13,15 @@ enum ReaderTheme { light, sepia, dark }
 
 extension ReaderThemeColors on ReaderTheme {
   Color get background => switch (this) {
-        ReaderTheme.light => const Color(0xFFFFFFFF),
-        ReaderTheme.sepia => const Color(0xFFF4ECD8),
-        ReaderTheme.dark => const Color(0xFF121212),
-      };
+    ReaderTheme.light => const Color(0xFFFFFFFF),
+    ReaderTheme.sepia => const Color(0xFFF4ECD8),
+    ReaderTheme.dark => const Color(0xFF121212),
+  };
   Color get foreground => switch (this) {
-        ReaderTheme.light => const Color(0xFF1A1A1A),
-        ReaderTheme.sepia => const Color(0xFF5B4636),
-        ReaderTheme.dark => const Color(0xFFD6D6D6),
-      };
-  String get label => switch (this) {
-        ReaderTheme.light => 'Light',
-        ReaderTheme.sepia => 'Sepia',
-        ReaderTheme.dark => 'Dark',
-      };
+    ReaderTheme.light => const Color(0xFF1A1A1A),
+    ReaderTheme.sepia => const Color(0xFF5B4636),
+    ReaderTheme.dark => const Color(0xFFD6D6D6),
+  };
 }
 
 /// The reading typeface. All four are bundled with the app (SIL Open Font
@@ -36,34 +31,37 @@ enum ReaderFont { serif, garamond, sans, dyslexic }
 
 /// System fonts used only for characters a bundled font lacks (e.g. Chinese,
 /// or Greek in Atkinson Hyperlegible).
-const _serifFallback = ['Noto Serif', 'Georgia', 'Times New Roman', 'DejaVu Serif', 'serif'];
-const _sansFallback = ['Noto Sans', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'DejaVu Sans', 'sans-serif'];
+const _serifFallback = [
+  'Noto Serif',
+  'Georgia',
+  'Times New Roman',
+  'DejaVu Serif',
+  'serif',
+];
+const _sansFallback = [
+  'Noto Sans',
+  'Segoe UI',
+  'Roboto',
+  'Helvetica Neue',
+  'DejaVu Sans',
+  'sans-serif',
+];
 
 extension ReaderFontInfo on ReaderFont {
   String get label => switch (this) {
-        ReaderFont.serif => 'Literata',
-        ReaderFont.garamond => 'EB Garamond',
-        ReaderFont.sans => 'Atkinson',
-        ReaderFont.dyslexic => 'OpenDyslexic',
-      };
-
-  String get description => switch (this) {
-        ReaderFont.serif => 'Literata: a serif designed for reading on screens.',
-        ReaderFont.garamond => 'EB Garamond: a classic book face, based on 16th-century type.',
-        ReaderFont.sans => 'Atkinson Hyperlegible: a sans-serif designed by the Braille '
-            'Institute so that similar letters are easy to tell apart.',
-        ReaderFont.dyslexic => 'OpenDyslexic has weighted letter bottoms to help keep letters '
-            'from flipping or swapping. Many readers also find extra letter spacing and '
-            'unjustified text easier.',
-      };
+    ReaderFont.serif => 'Literata',
+    ReaderFont.garamond => 'EB Garamond',
+    ReaderFont.sans => 'Atkinson',
+    ReaderFont.dyslexic => 'OpenDyslexic',
+  };
 
   /// The bundled family, then system fallbacks for missing characters.
   List<String> get families => switch (this) {
-        ReaderFont.serif => const ['Literata', ..._serifFallback],
-        ReaderFont.garamond => const ['EB Garamond', 'Literata', ..._serifFallback],
-        ReaderFont.sans => const ['Atkinson Hyperlegible', ..._sansFallback],
-        ReaderFont.dyslexic => const ['OpenDyslexic', ..._sansFallback],
-      };
+    ReaderFont.serif => const ['Literata', ..._serifFallback],
+    ReaderFont.garamond => const ['EB Garamond', 'Literata', ..._serifFallback],
+    ReaderFont.sans => const ['Atkinson Hyperlegible', ..._sansFallback],
+    ReaderFont.dyslexic => const ['OpenDyslexic', ..._sansFallback],
+  };
 }
 
 /// Literata with fallbacks, for reading-style text outside the book view.
@@ -100,6 +98,14 @@ class SettingsService extends ChangeNotifier {
   /// 0 = neutral; higher removes blue light for a warmer, amber look (0..1).
   double warmth = 0;
 
+  // ---------- Interface ----------
+  /// Interface language code, or '' to follow the device.
+  String appLanguage = '';
+
+  /// Changes only when [appLanguage] does, so the whole app is rebuilt for
+  /// a new language but not for every slider movement.
+  final appLanguageListenable = ValueNotifier<String>('');
+
   // ---------- Remembered choices ----------
   /// Gutenberg language code for the catalog, or '' for all languages.
   String catalogLanguage = 'en';
@@ -124,13 +130,16 @@ class SettingsService extends ChangeNotifier {
     _file = File(p.join(dir.path, 'settings.json'));
     if (await _file!.exists()) {
       try {
-        fromJson(jsonDecode(await _file!.readAsString()) as Map<String, dynamic>);
+        fromJson(
+          jsonDecode(await _file!.readAsString()) as Map<String, dynamic>,
+        );
       } catch (_) {}
     }
   }
 
   void fromJson(Map<String, dynamic> j) {
-    double num_(String k, double fallback) => (j[k] as num?)?.toDouble() ?? fallback;
+    double num_(String k, double fallback) =>
+        (j[k] as num?)?.toDouble() ?? fallback;
     T enum_<T extends Enum>(List<T> values, String k, T fallback) =>
         values.firstWhere((v) => v.name == j[k], orElse: () => fallback);
 
@@ -147,47 +156,54 @@ class SettingsService extends ChangeNotifier {
     lineWidth = num_('lineWidth', lineWidth).clamp(360.0, 1200.0);
     brightness = num_('brightness', brightness).clamp(0.3, 1.0);
     warmth = num_('warmth', warmth).clamp(0.0, 1.0);
+    appLanguage = j['appLanguage'] as String? ?? appLanguage;
+    appLanguageListenable.value = appLanguage;
     catalogLanguage = j['catalogLanguage'] as String? ?? catalogLanguage;
     readingWpm = num_('readingWpm', readingWpm);
     translateTo = j['translateTo'] as String? ?? translateTo;
-    highlightColor = enum_(HighlightColor.values, 'highlightColor', highlightColor);
+    highlightColor = enum_(
+      HighlightColor.values,
+      'highlightColor',
+      highlightColor,
+    );
     libraryView = j['libraryView'] as String? ?? libraryView;
     librarySort = enum_(LibrarySort.values, 'librarySort', librarySort);
   }
 
   Map<String, dynamic> toJson() => {
-        'fontSize': fontSize,
-        'lineHeight': lineHeight,
-        'font': font.name,
-        'readerTheme': readerTheme.name,
-        'letterSpacing': letterSpacing,
-        'justify': justify,
-        'margin': margin,
-        'lineWidth': lineWidth,
-        'brightness': brightness,
-        'warmth': warmth,
-        'catalogLanguage': catalogLanguage,
-        'readingWpm': readingWpm,
-        'translateTo': translateTo,
-        'highlightColor': highlightColor.name,
-        'libraryView': libraryView,
-        'librarySort': librarySort.name,
-      };
+    'fontSize': fontSize,
+    'lineHeight': lineHeight,
+    'font': font.name,
+    'readerTheme': readerTheme.name,
+    'letterSpacing': letterSpacing,
+    'justify': justify,
+    'margin': margin,
+    'lineWidth': lineWidth,
+    'brightness': brightness,
+    'warmth': warmth,
+    'appLanguage': appLanguage,
+    'catalogLanguage': catalogLanguage,
+    'readingWpm': readingWpm,
+    'translateTo': translateTo,
+    'highlightColor': highlightColor.name,
+    'libraryView': libraryView,
+    'librarySort': librarySort.name,
+  };
 
   /// Puts the text and screen settings back to their defaults.
   void resetDisplay() => update((s) {
-        final d = SettingsService._defaults();
-        s
-          ..fontSize = d.fontSize
-          ..lineHeight = d.lineHeight
-          ..font = d.font
-          ..letterSpacing = d.letterSpacing
-          ..justify = d.justify
-          ..margin = d.margin
-          ..lineWidth = d.lineWidth
-          ..brightness = d.brightness
-          ..warmth = d.warmth;
-      });
+    final d = SettingsService._defaults();
+    s
+      ..fontSize = d.fontSize
+      ..lineHeight = d.lineHeight
+      ..font = d.font
+      ..letterSpacing = d.letterSpacing
+      ..justify = d.justify
+      ..margin = d.margin
+      ..lineWidth = d.lineWidth
+      ..brightness = d.brightness
+      ..warmth = d.warmth;
+  });
 
   SettingsService();
   SettingsService._defaults();
@@ -198,6 +214,7 @@ class SettingsService extends ChangeNotifier {
   void update(void Function(SettingsService s) change) {
     change(this);
     notifyListeners();
+    appLanguageListenable.value = appLanguage;
     // Sliders send many changes per second: save once they settle, one
     // write at a time.
     _saveTimer?.cancel();
@@ -205,13 +222,15 @@ class SettingsService extends ChangeNotifier {
       final file = _file;
       if (file == null) return;
       final json = jsonEncode(toJson());
-      _saving = _saving.then((_) async {
-        final tmp = File('${file.path}.tmp');
-        await tmp.writeAsString(json);
-        await tmp.rename(file.path);
-      }).catchError((Object e) {
-        debugPrint('Could not save settings: $e');
-      });
+      _saving = _saving
+          .then((_) async {
+            final tmp = File('${file.path}.tmp');
+            await tmp.writeAsString(json);
+            await tmp.rename(file.path);
+          })
+          .catchError((Object e) {
+            debugPrint('Could not save settings: $e');
+          });
     });
   }
 

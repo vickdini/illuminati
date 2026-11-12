@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_helpers.dart';
 import '../models/annotation.dart';
 
 class NoteResult {
@@ -23,7 +24,7 @@ Future<NoteResult?> showNoteDialog(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setState) => AlertDialog(
-        title: const Text('Note'),
+        title: Text(L10n.of(context).note),
         content: SizedBox(
           width: 460,
           child: Column(
@@ -33,12 +34,16 @@ Future<NoteResult?> showNoteDialog(
               Container(
                 padding: const EdgeInsets.only(left: 10),
                 decoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: selected.swatch, width: 4)),
+                  border: Border(
+                    left: BorderSide(color: selected.swatch, width: 4),
+                  ),
                 ),
-                child: Text(quote,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontStyle: FontStyle.italic)),
+                child: Text(
+                  quote,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -46,41 +51,52 @@ Future<NoteResult?> showNoteDialog(
                 autofocus: true,
                 minLines: 3,
                 maxLines: 8,
-                decoration: const InputDecoration(
-                  hintText: 'Write a note…',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: L10n.of(context).writeNote,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
-              Row(children: [
-                for (final c in HighlightColor.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: InkResponse(
-                      onTap: () => setState(() => selected = c),
-                      child: CircleAvatar(
-                        radius: 15,
-                        backgroundColor: c.swatch,
-                        child: c == selected
-                            ? const Icon(Icons.check, size: 18, color: Colors.black87)
-                            : null,
+              Row(
+                children: [
+                  for (final c in HighlightColor.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: InkResponse(
+                        onTap: () => setState(() => selected = c),
+                        child: CircleAvatar(
+                          radius: 15,
+                          backgroundColor: c.swatch,
+                          child: c == selected
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 18,
+                                  color: Colors.black87,
+                                )
+                              : null,
+                        ),
                       ),
                     ),
-                  ),
-              ]),
+                ],
+              ),
             ],
           ),
         ),
         actions: [
           if (canDelete)
             TextButton(
-              onPressed: () => Navigator.pop(ctx, NoteResult('', selected, delete: true)),
-              child: const Text('Remove highlight'),
+              onPressed: () =>
+                  Navigator.pop(ctx, NoteResult('', selected, delete: true)),
+              child: Text(L10n.of(context).removeHighlight),
             ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(L10n.of(context).cancel),
+          ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, NoteResult(ctrl.text.trim(), selected)),
-            child: const Text('Save'),
+            onPressed: () =>
+                Navigator.pop(ctx, NoteResult(ctrl.text.trim(), selected)),
+            child: Text(L10n.of(context).save),
           ),
         ],
       ),

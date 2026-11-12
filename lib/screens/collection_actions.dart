@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../l10n/l10n_helpers.dart';
 import '../models/book.dart';
 import '../models/shelf.dart';
 import 'book_actions.dart';
@@ -9,9 +10,10 @@ import 'book_actions.dart';
 Future<String?> showShelfNameDialog(
   BuildContext context, {
   String initial = '',
-  String title = 'New shelf',
+  String? title,
 }) {
   final ctrl = TextEditingController(text: initial);
+  final t = L10n.of(context);
   return showDialog<String>(
     context: context,
     builder: (ctx) {
@@ -20,24 +22,22 @@ Future<String?> showShelfNameDialog(
       }
 
       return AlertDialog(
-        title: Text(title),
+        title: Text(title ?? t.newShelf),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           maxLength: 40,
-          decoration: const InputDecoration(
-            hintText: 'e.g. Favorites, Philosophy, To read',
-          ),
+          decoration: InputDecoration(hintText: t.shelfNameHint),
           onSubmitted: (_) => submit(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(L10n.of(context).cancel),
           ),
           FilledButton(
             onPressed: submit,
-            child: Text(initial.isEmpty ? 'Create' : 'Rename'),
+            child: Text(initial.isEmpty ? t.create : t.rename),
           ),
         ],
       );
@@ -56,7 +56,7 @@ Future<void> showShelfPicker(BuildContext context, Book book) {
       builder: (ctx, _) {
         final shelves = library.shelves;
         return AlertDialog(
-          title: const Text('Add to shelf'),
+          title: Text(L10n.of(context).addToShelf),
           contentPadding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
           content: SizedBox(
             width: 380,
@@ -64,25 +64,22 @@ Future<void> showShelfPicker(BuildContext context, Book book) {
               shrinkWrap: true,
               children: [
                 if (shelves.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      'You have no shelves yet. Create one to group books '
-                      'any way you like.',
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(L10n.of(context).noShelvesYet),
                   ),
                 for (final s in shelves)
                   CheckboxListTile(
                     value: s.contains(book.id),
                     title: Text(s.name),
                     subtitle: Text(
-                      '${s.bookIds.length} ${s.bookIds.length == 1 ? 'book' : 'books'}',
+                      L10n.of(context).bookCount(s.bookIds.length),
                     ),
                     onChanged: (v) => library.setOnShelf(s, book, v ?? false),
                   ),
                 ListTile(
                   leading: const Icon(Icons.add),
-                  title: const Text('New shelf…'),
+                  title: Text(L10n.of(context).newShelfEllipsis),
                   onTap: () async {
                     final name = await showShelfNameDialog(ctx);
                     if (name == null) return;
@@ -95,7 +92,7 @@ Future<void> showShelfPicker(BuildContext context, Book book) {
           actions: [
             FilledButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Done'),
+              child: Text(L10n.of(context).done),
             ),
           ],
         );
@@ -111,34 +108,32 @@ Future<void> showShelfMenu(
   Offset? at,
 }) async {
   final library = Services.of(context).library;
-  final choice = await _menu(context, at, const [
-    ('rename', Icons.edit_outlined, 'Rename shelf'),
-    ('delete', Icons.delete_outline, 'Delete shelf'),
+  final choice = await _menu(context, at, [
+    ('rename', Icons.edit_outlined, L10n.of(context).renameShelf),
+    ('delete', Icons.delete_outline, L10n.of(context).deleteShelf),
   ]);
   if (!context.mounted) return;
   if (choice == 'rename') {
     final name = await showShelfNameDialog(
       context,
       initial: shelf.name,
-      title: 'Rename shelf',
+      title: L10n.of(context).renameShelf,
     );
     if (name != null) library.renameShelf(shelf, name);
   } else if (choice == 'delete') {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete “${shelf.name}”?'),
-        content: const Text(
-          'The shelf is deleted; its books stay in your library.',
-        ),
+        title: Text(L10n.of(context).deleteShelfQuestion(shelf.name)),
+        content: Text(L10n.of(context).deleteShelfBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(L10n.of(context).cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(L10n.of(context).delete),
           ),
         ],
       ),
@@ -158,22 +153,30 @@ Future<void> showBookMenu(
   final want = entry.status == ReadingStatus.wantToRead;
   final finished = entry.status == ReadingStatus.finished;
   final choice = await _menu(context, at, [
-    ('details', Icons.info_outline, 'Book details'),
-    ('shelf', Icons.collections_bookmark_outlined, 'Add to shelf…'),
+    ('details', Icons.info_outline, L10n.of(context).bookDetails),
+    (
+      'shelf',
+      Icons.collections_bookmark_outlined,
+      L10n.of(context).addToShelfEllipsis,
+    ),
     if (!finished)
       want
           ? (
               'notwant',
               Icons.bookmark_remove_outlined,
-              'Remove from Want to read',
+              L10n.of(context).removeFromWantToRead,
             )
-          : ('want', Icons.bookmark_add_outlined, 'Want to read'),
+          : ('want', Icons.bookmark_add_outlined, L10n.of(context).wantToRead),
     finished
-        ? ('unfinished', Icons.replay, 'Mark as not finished')
-        : ('finished', Icons.check_circle_outline, 'Mark as finished'),
+        ? ('unfinished', Icons.replay, L10n.of(context).markNotFinished)
+        : (
+            'finished',
+            Icons.check_circle_outline,
+            L10n.of(context).markFinished,
+          ),
     if (entry.isDownloaded)
-      ('undownload', Icons.cloud_off_outlined, 'Remove download'),
-    ('remove', Icons.delete_outline, 'Remove from library'),
+      ('undownload', Icons.cloud_off_outlined, L10n.of(context).removeDownload),
+    ('remove', Icons.delete_outline, L10n.of(context).removeFromLibrary),
   ]);
   if (!context.mounted || choice == null) return;
   switch (choice) {
@@ -197,14 +200,10 @@ Future<void> showBookMenu(
 /// Frees the space used by a download; the book stays in the library.
 Future<void> removeDownload(BuildContext context, LibraryEntry entry) async {
   final messenger = ScaffoldMessenger.of(context);
+  final t = L10n.of(context);
   await Services.of(context).library.removeDownload(entry.book.id);
   messenger.showSnackBar(
-    SnackBar(
-      content: Text(
-        'Download removed. “${entry.book.title}” stays in your library '
-        'with your notes and place.',
-      ),
-    ),
+    SnackBar(content: Text(t.downloadRemoved(entry.book.title))),
   );
 }
 

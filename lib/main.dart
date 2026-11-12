@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'l10n/l10n_helpers.dart';
 import 'screens/home_screen.dart';
 import 'services/catalog_service.dart';
 import 'services/library_service.dart';
@@ -23,8 +24,9 @@ Future<void> main() async {
       ('Atkinson Hyperlegible', 'atkinson'),
       ('OpenDyslexic', 'opendyslexic'),
     ]) {
-      yield LicenseEntryWithLineBreaks(
-          [name], await rootBundle.loadString('assets/fonts/$folder/OFL.txt'));
+      yield LicenseEntryWithLineBreaks([
+        name,
+      ], await rootBundle.loadString('assets/fonts/$folder/OFL.txt'));
     }
   });
   final settings = SettingsService();
@@ -39,16 +41,18 @@ Future<void> main() async {
   await Future.wait([settings.init(), library.init()]);
   // Download/refresh the offline title index in the background.
   final titleIndex = TitleIndex()..load();
-  runApp(IlluminatiApp(
-    services: AppServices(
-      catalog: catalog,
-      sources: sources,
-      titleIndex: titleIndex,
-      lookup: LookupService(),
-      library: library,
-      settings: settings,
+  runApp(
+    IlluminatiApp(
+      services: AppServices(
+        catalog: catalog,
+        sources: sources,
+        titleIndex: titleIndex,
+        lookup: LookupService(),
+        library: library,
+        settings: settings,
+      ),
     ),
-  ));
+  );
 }
 
 class AppServices {
@@ -107,21 +111,29 @@ class IlluminatiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Services(
       services: services,
-      child: MaterialApp(
-        title: 'Illuminati',
-        debugShowCheckedModeBanner: false,
-        theme: _theme(Brightness.light),
-        darkTheme: _theme(Brightness.dark),
-        home: const HomeScreen(),
-        // Brightness and warmth (Display & accessibility) tint everything.
-        builder: (context, child) => ListenableBuilder(
-          listenable: services.settings,
-          builder: (context, _) => services.settings.hasScreenFilter
-              ? ColorFiltered(
-                  colorFilter: ColorFilter.matrix(services.settings.screenFilter),
-                  child: child,
-                )
-              : child!,
+      child: ValueListenableBuilder<String>(
+        valueListenable: services.settings.appLanguageListenable,
+        builder: (context, language, _) => MaterialApp(
+          title: 'Illuminati',
+          locale: language.isEmpty ? null : Locale(language),
+          supportedLocales: L10n.supportedLocales,
+          localizationsDelegates: L10n.localizationsDelegates,
+          debugShowCheckedModeBanner: false,
+          theme: _theme(Brightness.light),
+          darkTheme: _theme(Brightness.dark),
+          home: const HomeScreen(),
+          // Brightness and warmth (Display & accessibility) tint everything.
+          builder: (context, child) => ListenableBuilder(
+            listenable: services.settings,
+            builder: (context, _) => services.settings.hasScreenFilter
+                ? ColorFiltered(
+                    colorFilter: ColorFilter.matrix(
+                      services.settings.screenFilter,
+                    ),
+                    child: child,
+                  )
+                : child!,
+          ),
         ),
       ),
     );

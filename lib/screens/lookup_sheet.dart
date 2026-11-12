@@ -1,30 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_helpers.dart';
 import '../main.dart';
 import '../services/lookup_service.dart';
 import '../services/settings_service.dart' show readingSerif;
+import '../services/title_index.dart' show fold;
 
-/// Translation targets, in alphabetical order by name.
-const translateLanguages = <(String, String)>[
-  ('ar', 'Arabic'),
-  ('zh', 'Chinese'),
-  ('nl', 'Dutch'),
-  ('en', 'English'),
-  ('fr', 'French'),
-  ('de', 'German'),
-  ('el', 'Greek'),
-  ('he', 'Hebrew'),
-  ('hi', 'Hindi'),
-  ('it', 'Italian'),
-  ('ja', 'Japanese'),
-  ('ko', 'Korean'),
-  ('pl', 'Polish'),
-  ('pt', 'Portuguese'),
-  ('ru', 'Russian'),
-  ('es', 'Spanish'),
-  ('sv', 'Swedish'),
-  ('tr', 'Turkish'),
+/// Languages text can be translated into (codes MyMemory understands).
+const translateLanguages = [
+  'ar',
+  'zh',
+  'nl',
+  'en',
+  'fr',
+  'de',
+  'el',
+  'he',
+  'hi',
+  'it',
+  'ja',
+  'ko',
+  'pl',
+  'pt',
+  'ru',
+  'es',
+  'sv',
+  'tr',
 ];
+
+/// [translateLanguages] with their names in the interface language, sorted
+/// alphabetically by those names (accents ignored: "Árabe" sorts under A).
+List<(String, String)> sortedTranslateLanguages(L10n t) =>
+    [for (final c in translateLanguages) (c, languageName(t, c))]
+      ..sort((a, b) => fold(a.$2).compareTo(fold(b.$2)));
 
 enum LookupMode { define, translate }
 
@@ -113,7 +121,7 @@ class _LookupSheetState extends State<_LookupSheet> {
               child: Text(
                 _mode == LookupMode.define
                     ? LookupService.cleanWord(widget.text)
-                    : 'Translation',
+                    : L10n.of(context).translation,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontFamily: 'Literata',
                   fontFamilyFallback: readingSerif,
@@ -127,14 +135,14 @@ class _LookupSheetState extends State<_LookupSheet> {
               segments: [
                 ButtonSegment(
                   value: LookupMode.define,
-                  label: const Text('Define'),
+                  label: Text(L10n.of(context).define),
                   icon: const Icon(Icons.menu_book_outlined),
                   enabled: _canDefine,
                 ),
-                const ButtonSegment(
+                ButtonSegment(
                   value: LookupMode.translate,
-                  label: Text('Translate'),
-                  icon: Icon(Icons.translate),
+                  label: Text(L10n.of(context).translate),
+                  icon: const Icon(Icons.translate),
                 ),
               ],
               selected: {_mode},
@@ -162,16 +170,20 @@ class _LookupSheetState extends State<_LookupSheet> {
           );
         }
         if (snap.hasError) {
-          return _message(theme, Icons.cloud_off, '${snap.error}');
+          return _message(
+            theme,
+            Icons.cloud_off,
+            errorText(L10n.of(context), snap.error!),
+          );
         }
         final entries = snap.data ?? const [];
         if (entries.isEmpty) {
           return Column(
             children: [
-              _message(theme, Icons.search_off, 'No definition found.'),
+              _message(theme, Icons.search_off, L10n.of(context).noDefinition),
               TextButton.icon(
                 icon: const Icon(Icons.translate),
-                label: const Text('Translate instead'),
+                label: Text(L10n.of(context).translateInstead),
                 onPressed: () => setState(() => _mode = LookupMode.translate),
               ),
             ],
@@ -217,7 +229,7 @@ class _LookupSheetState extends State<_LookupSheet> {
         }
         children.add(
           Text(
-            'Definitions from Wiktionary (CC BY-SA).',
+            L10n.of(context).definitionsCredit,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -248,14 +260,14 @@ class _LookupSheetState extends State<_LookupSheet> {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Text('Into: '),
+            Text('${L10n.of(context).translateInto} '),
             DropdownButton<String>(
-              value: translateLanguages.any((l) => l.$1 == target)
-                  ? target
-                  : 'en',
+              value: translateLanguages.contains(target) ? target : 'en',
               items: [
-                for (final l in translateLanguages)
-                  DropdownMenuItem(value: l.$1, child: Text(l.$2)),
+                for (final (code, name) in sortedTranslateLanguages(
+                  L10n.of(context),
+                ))
+                  DropdownMenuItem(value: code, child: Text(name)),
               ],
               onChanged: (v) {
                 if (v == null) return;
@@ -267,11 +279,7 @@ class _LookupSheetState extends State<_LookupSheet> {
         ),
         const SizedBox(height: 8),
         if (widget.bookLanguage == target)
-          _message(
-            theme,
-            Icons.translate,
-            'This book is already in that language. Choose another one above.',
-          )
+          _message(theme, Icons.translate, L10n.of(context).alreadyInLanguage)
         else
           FutureBuilder<Translation>(
             future: _translation,
@@ -283,7 +291,11 @@ class _LookupSheetState extends State<_LookupSheet> {
                 );
               }
               if (snap.hasError) {
-                return _message(theme, Icons.cloud_off, '${snap.error}');
+                return _message(
+                  theme,
+                  Icons.cloud_off,
+                  errorText(L10n.of(context), snap.error!),
+                );
               }
               return SelectableText(
                 snap.data!.text,
@@ -293,7 +305,7 @@ class _LookupSheetState extends State<_LookupSheet> {
           ),
         const SizedBox(height: 16),
         Text(
-          'Translations by MyMemory. Selected text is sent to their service.',
+          L10n.of(context).translationCredit,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

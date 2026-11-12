@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../l10n/l10n_helpers.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -100,13 +101,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _open() async {
-    final path = widget.entry.epubPath!; // the reader only opens downloaded books
+    final path =
+        widget.entry.epubPath!; // the reader only opens downloaded books
     try {
       // Parse on a background isolate; pass a top-level function so nothing
       // from this State object is captured and sent across.
       final book = await compute(parseEpubFile, path);
-      final notes =
-          await BookAnnotations.load(_services.library.annotationsFile(widget.entry.book.id));
+      final notes = await BookAnnotations.load(
+        _services.library.annotationsFile(widget.entry.book.id),
+      );
       if (!mounted) return;
       notes.reanchor(book);
       notes.addListener(_onNotesChanged);
@@ -145,7 +148,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       });
       _positions.itemPositions.addListener(_onPositions);
     } catch (e) {
-      if (mounted) setState(() => _error = 'This book could not be opened.\n$e');
+      if (mounted) {
+        setState(() => _error = L10n.of(context).bookOpenError('$e'));
+      }
     }
   }
 
@@ -163,7 +168,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _saveNow();
     if ((_wpm - _services.settings.readingWpm).abs() > 1) {
       final wpm = _wpm;
-      Future.microtask(() => _services.settings.update((s) => s.readingWpm = wpm));
+      Future.microtask(
+        () => _services.settings.update((s) => s.readingWpm = wpm),
+      );
     }
     super.dispose();
   }
@@ -183,24 +190,24 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   /// Words from each paragraph to the end of the chapter.
   List<int> _suffix(int chapter) => _suffixWords.putIfAbsent(chapter, () {
-        final blocks = _book!.chapters[chapter].blocks;
-        final out = List<int>.filled(blocks.length + 1, 0);
-        final word = RegExp(r'\S+');
-        for (var i = blocks.length - 1; i >= 0; i--) {
-          out[i] = out[i + 1] + word.allMatches(blocks[i].text).length;
-        }
-        return out;
-      });
+    final blocks = _book!.chapters[chapter].blocks;
+    final out = List<int>.filled(blocks.length + 1, 0);
+    final word = RegExp(r'\S+');
+    for (var i = blocks.length - 1; i >= 0; i--) {
+      out[i] = out[i + 1] + word.allMatches(blocks[i].text).length;
+    }
+    return out;
+  });
 
   String get _timeLeftLabel {
     final s = _suffix(_chapter);
     final end = _book!.sectionEnd(_chapter, _block).clamp(0, s.length - 1);
     final words = s[_block.clamp(0, s.length - 1)] - s[end];
     final mins = words / _wpm;
-    if (mins < 1) return 'Less than a minute left in chapter';
+    if (mins < 1) return L10n.of(context).lessThanMinuteLeft;
     final m = mins.round();
-    if (m < 60) return '$m min left in chapter';
-    return '${m ~/ 60} h ${m % 60} min left in chapter';
+    if (m < 60) return L10n.of(context).minutesLeft(m);
+    return L10n.of(context).hoursMinutesLeft(m ~/ 60, m % 60);
   }
 
   void _learnSpeed(int from, int to) {
@@ -224,21 +231,25 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_finishHandled) return;
     _finishHandled = true;
     final book = widget.entry.book;
-    final previous = _services.library.entry(book.id)?.status ?? ReadingStatus.none;
+    final previous =
+        _services.library.entry(book.id)?.status ?? ReadingStatus.none;
     if (previous == ReadingStatus.finished) return;
     _services.library.setStatus(book, ReadingStatus.finished);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('You finished “${book.title}”. It’s now on your Finished list.'),
-      action: SnackBarAction(
-        label: 'Undo',
-        onPressed: () => _services.library.setStatus(book, previous),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(L10n.of(context).finishedBook(book.title)),
+        action: SnackBarAction(
+          label: L10n.of(context).undo,
+          onPressed: () => _services.library.setStatus(book, previous),
+        ),
       ),
-    ));
+    );
   }
 
   void _onPositions() {
-    final visible = _positions.itemPositions.value
-        .where((p) => p.itemTrailingEdge > 0 && p.itemLeadingEdge < 1);
+    final visible = _positions.itemPositions.value.where(
+      (p) => p.itemTrailingEdge > 0 && p.itemLeadingEdge < 1,
+    );
     if (visible.isEmpty) return;
     var first = visible.first.index, last = first;
     for (final p in visible) {
@@ -248,7 +259,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final blockCount = _book!.chapters[_chapter].blocks.length;
     // "The End" (the item after the last paragraph of the last chapter) is
     // on screen: the book is finished.
-    if (_chapter == _book!.chapters.length - 1 && last >= blockCount) _markFinished();
+    if (_chapter == _book!.chapters.length - 1 && last >= blockCount) {
+      _markFinished();
+    }
     final block = first.clamp(0, blockCount - 1);
     final lastBlock = last.clamp(0, blockCount - 1);
     if (block != _block || lastBlock != _lastVisible) {
@@ -279,8 +292,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   void _saveNow() {
     if (_book == null) return;
-    _services.library.saveProgress(widget.entry.book.id,
-        chapter: _chapter, block: _block, progress: _progress, anchor: _anchorText());
+    _services.library.saveProgress(
+      widget.entry.book.id,
+      chapter: _chapter,
+      block: _block,
+      progress: _progress,
+      anchor: _anchorText(),
+    );
   }
 
   // ---------- Navigation ----------
@@ -291,8 +309,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _positions.itemPositions.removeListener(_onPositions);
     setState(() {
       _chapter = index;
-      _block = _lastVisible =
-          _initialBlock = block.clamp(0, book.chapters[index].blocks.length - 1);
+      _block = _lastVisible = _initialBlock = block.clamp(
+        0,
+        book.chapters[index].blocks.length - 1,
+      );
       _initialAlign = align;
       _blockEpoch.clear();
       _selecting = false;
@@ -318,36 +338,47 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   bool get _atChapterEnd {
     final last = _book!.chapters[_chapter].blocks.length; // trailing nav item
-    return _positions.itemPositions.value
-        .any((p) => p.index == last && p.itemTrailingEdge <= 1.01);
+    return _positions.itemPositions.value.any(
+      (p) => p.index == last && p.itemTrailingEdge <= 1.01,
+    );
   }
 
-  bool get _atChapterStart => _positions.itemPositions.value
-      .any((p) => p.index == 0 && p.itemLeadingEdge >= -0.01);
+  bool get _atChapterStart => _positions.itemPositions.value.any(
+    (p) => p.index == 0 && p.itemLeadingEdge >= -0.01,
+  );
 
   void _pageForward() {
     if (_atChapterEnd) {
       _goToChapter(_chapter + 1);
     } else {
       _offsetScroll.animateScroll(
-          offset: _viewport * 0.9, duration: const Duration(milliseconds: 220));
+        offset: _viewport * 0.9,
+        duration: const Duration(milliseconds: 220),
+      );
     }
   }
 
   void _pageBack() {
     if (_atChapterStart) {
       if (_chapter > 0) {
-        _goToChapter(_chapter - 1, block: _book!.chapters[_chapter - 1].blocks.length - 1);
+        _goToChapter(
+          _chapter - 1,
+          block: _book!.chapters[_chapter - 1].blocks.length - 1,
+        );
       }
     } else {
       _offsetScroll.animateScroll(
-          offset: -_viewport * 0.9, duration: const Duration(milliseconds: 220));
+        offset: -_viewport * 0.9,
+        duration: const Duration(milliseconds: 220),
+      );
     }
   }
 
   bool _onKey(KeyEvent event) {
     if (!mounted || _book == null) return false;
-    if (!(_route?.isCurrent ?? false)) return false; // a dialog or sheet is open
+    if (!(_route?.isCurrent ?? false)) {
+      return false; // a dialog or sheet is open
+    }
     if (_scaffoldKey.currentState?.isDrawerOpen ?? false) return false;
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
     final kb = HardwareKeyboard.instance;
@@ -365,18 +396,27 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
       return false;
     }
-    if (kb.isShiftPressed || kb.isAltPressed) return false; // e.g. extend selection
+    if (kb.isShiftPressed || kb.isAltPressed) {
+      return false; // e.g. extend selection
+    }
 
     if (key == LogicalKeyboardKey.arrowRight ||
         key == LogicalKeyboardKey.pageDown ||
         key == LogicalKeyboardKey.space) {
       _pageForward();
-    } else if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.pageUp) {
+    } else if (key == LogicalKeyboardKey.arrowLeft ||
+        key == LogicalKeyboardKey.pageUp) {
       _pageBack();
     } else if (key == LogicalKeyboardKey.arrowDown) {
-      _offsetScroll.animateScroll(offset: 60, duration: const Duration(milliseconds: 80));
+      _offsetScroll.animateScroll(
+        offset: 60,
+        duration: const Duration(milliseconds: 80),
+      );
     } else if (key == LogicalKeyboardKey.arrowUp) {
-      _offsetScroll.animateScroll(offset: -60, duration: const Duration(milliseconds: 80));
+      _offsetScroll.animateScroll(
+        offset: -60,
+        duration: const Duration(milliseconds: 80),
+      );
     } else if (key == LogicalKeyboardKey.f3 && _hits.isNotEmpty) {
       _stepHit(1);
     } else if (key == LogicalKeyboardKey.escape) {
@@ -404,7 +444,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
     final now = DateTime.now();
     // Second click of a double-click (word selection) is never a page turn.
-    _multiClick = _lastUp != null && now.difference(_lastUp!) < const Duration(milliseconds: 350);
+    _multiClick =
+        _lastUp != null &&
+        now.difference(_lastUp!) < const Duration(milliseconds: 350);
     _downPos = e.localPosition;
     _downTime = now;
   }
@@ -415,7 +457,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _lastUp = DateTime.now();
     if (down == null || _downTime == null || _multiClick) return;
     if ((e.localPosition - down).distance > 12) return; // a drag or selection
-    if (DateTime.now().difference(_downTime!) > const Duration(milliseconds: 350)) {
+    if (DateTime.now().difference(_downTime!) >
+        const Duration(milliseconds: 350)) {
       return; // a long press (selects text on phones)
     }
     final x = e.localPosition.dx;
@@ -471,7 +514,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _selecting = true;
       if (previous != null && previous != block) {
         // Only one selection at a time: reset the paragraph selected before.
-        setState(() => _blockEpoch[previous] = (_blockEpoch[previous] ?? 0) + 1);
+        setState(
+          () => _blockEpoch[previous] = (_blockEpoch[previous] ?? 0) + 1,
+        );
       }
     } else if (_selBlock == block) {
       _selecting = false;
@@ -479,60 +524,82 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   SelectionActions _actionsFor(int block) => SelectionActions(
-        highlight: (start, end, text) {
-          _notes!.addHighlight(Highlight(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            chapter: _chapter,
-            block: block,
-            start: start,
-            end: end,
-            text: text,
-            color: _services.settings.highlightColor,
-            created: DateTime.now(),
-          ));
-          _clearSelection();
-        },
-        addNote: (start, end, text) async {
-          _clearSelection();
-          final r = await showNoteDialog(context,
-              quote: text, color: _services.settings.highlightColor);
-          if (r == null || r.delete) return;
-          _services.settings.update((s) => s.highlightColor = r.color);
-          _notes!.addHighlight(Highlight(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            chapter: _chapter,
-            block: block,
-            start: start,
-            end: end,
-            text: text,
-            color: r.color,
-            note: r.note,
-            created: DateTime.now(),
-          ));
-        },
-        define: (text) {
-          _clearSelection();
-          showLookup(context, text, mode: LookupMode.define, bookLanguage: _bookLanguage);
-        },
-        translate: (text) {
-          _clearSelection();
-          showLookup(context, text, mode: LookupMode.translate, bookLanguage: _bookLanguage);
-        },
-        editHighlight: (h) {
-          _clearSelection();
-          _editHighlight(h);
-        },
-        removeHighlight: (h) {
-          _clearSelection();
-          _notes!.removeHighlight(h);
-        },
-        selectionChanged: (active) => _onSelection(block, active),
-        menuChanged: (open) => _menuOpen = open,
+    highlight: (start, end, text) {
+      _notes!.addHighlight(
+        Highlight(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          chapter: _chapter,
+          block: block,
+          start: start,
+          end: end,
+          text: text,
+          color: _services.settings.highlightColor,
+          created: DateTime.now(),
+        ),
       );
+      _clearSelection();
+    },
+    addNote: (start, end, text) async {
+      _clearSelection();
+      final r = await showNoteDialog(
+        context,
+        quote: text,
+        color: _services.settings.highlightColor,
+      );
+      if (r == null || r.delete) return;
+      _services.settings.update((s) => s.highlightColor = r.color);
+      _notes!.addHighlight(
+        Highlight(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          chapter: _chapter,
+          block: block,
+          start: start,
+          end: end,
+          text: text,
+          color: r.color,
+          note: r.note,
+          created: DateTime.now(),
+        ),
+      );
+    },
+    define: (text) {
+      _clearSelection();
+      showLookup(
+        context,
+        text,
+        mode: LookupMode.define,
+        bookLanguage: _bookLanguage,
+      );
+    },
+    translate: (text) {
+      _clearSelection();
+      showLookup(
+        context,
+        text,
+        mode: LookupMode.translate,
+        bookLanguage: _bookLanguage,
+      );
+    },
+    editHighlight: (h) {
+      _clearSelection();
+      _editHighlight(h);
+    },
+    removeHighlight: (h) {
+      _clearSelection();
+      _notes!.removeHighlight(h);
+    },
+    selectionChanged: (active) => _onSelection(block, active),
+    menuChanged: (open) => _menuOpen = open,
+  );
 
   Future<void> _editHighlight(Highlight h) async {
-    final r = await showNoteDialog(context,
-        quote: h.text, note: h.note, color: h.color, canDelete: true);
+    final r = await showNoteDialog(
+      context,
+      quote: h.text,
+      note: h.note,
+      color: h.color,
+      canDelete: true,
+    );
     if (r == null) return;
     if (r.delete) {
       _notes!.removeHighlight(h);
@@ -544,7 +611,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
-  Bookmark? get _currentBookmark => _notes?.bookmarkIn(_chapter, _block, _lastVisible);
+  Bookmark? get _currentBookmark =>
+      _notes?.bookmarkIn(_chapter, _block, _lastVisible);
 
   void _toggleBookmark() {
     final notes = _notes;
@@ -564,8 +632,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
         break;
       }
     }
-    notes.toggleBookmark(Bookmark(
-        chapter: _chapter, block: _block, snippet: snippet, created: DateTime.now()));
+    notes.toggleBookmark(
+      Bookmark(
+        chapter: _chapter,
+        block: _block,
+        snippet: snippet,
+        created: DateTime.now(),
+      ),
+    );
   }
 
   // ---------- Search ----------
@@ -579,7 +653,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      builder: (ctx) => _SearchSheet(searcher: _searcher!, initialQuery: _searchQuery),
+      builder: (ctx) =>
+          _SearchSheet(searcher: _searcher!, initialQuery: _searchQuery),
     );
     if (r == null || !mounted) return;
     setState(() {
@@ -605,10 +680,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   void _closeSearch() => setState(() {
-        _searchQuery = '';
-        _searchNorm = '';
-        _hits = const [];
-      });
+    _searchQuery = '';
+    _searchNorm = '';
+    _hits = const [];
+  });
 
   // ---------- UI ----------
 
@@ -654,11 +729,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: rt.foreground)),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Back')),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: rt.foreground),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(L10n.of(context).back),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -671,97 +756,121 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final activeHit = _hits.isEmpty ? null : _hits[_hitIndex];
     final faint = rt.foreground.withValues(alpha: 0.55);
 
-    return LayoutBuilder(builder: (context, box) {
-      _viewport = box.maxHeight - 40;
-      _width = box.maxWidth;
-      // Text column: at most the chosen line width, and always leaving the
-      // chosen margin on each side.
-      final available = box.maxWidth - 2 * settings.margin;
-      final column = available < settings.lineWidth ? available : settings.lineWidth;
-      final hPad = column < 200 ? settings.margin : (box.maxWidth - column) / 2;
-      return Stack(children: [
-        Positioned.fill(
-          bottom: 28,
-          child: Listener(
-            onPointerDown: _pointerDown,
-            onPointerUp: _pointerUp,
-            child: ScrollablePositionedList.builder(
-              key: ValueKey(_chapter),
-              itemScrollController: _itemScroll,
-              scrollOffsetController: _offsetScroll,
-              itemPositionsListener: _positions,
-              initialScrollIndex: _initialBlock,
-              initialAlignment: _initialAlign,
-              padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 24),
-              itemCount: chapter.blocks.length + 1,
-              itemBuilder: (context, i) {
-                if (i >= chapter.blocks.length) return _chapterEnd(book, rt);
-                final block = chapter.blocks[i];
-                final marks = _searchNorm.isEmpty || block.type == BlockType.image
-                    ? const <(int, int)>[]
-                    : _searcher!.matchesIn(_chapter, i, _searchNorm);
-                final bytes = block.image == null ? null : book.images[block.image];
-                return BlockView(
-                  key: ValueKey('$_epochBase-${_blockEpoch[i] ?? 0}-$i'),
-                  block: block,
-                  settings: settings,
-                  imageBytes: bytes,
-                  maxImageHeight: _viewport * 0.8,
-                  highlights: notes.inBlock(_chapter, i),
-                  searchMarks: marks,
-                  activeMark: activeHit != null &&
-                          activeHit.chapter == _chapter &&
-                          activeHit.block == i
-                      ? (activeHit.start, activeHit.end)
-                      : null,
-                  actions: _actionsFor(i),
-                  onImageTap: bytes == null
-                      ? null
-                      : () {
-                          _suppressTap = true;
-                          showImageViewer(context, bytes, block.alt);
-                        },
-                );
-              },
-            ),
-          ),
-        ),
-        // Bookmark ribbon on the current page.
-        if (_currentBookmark != null)
-          Positioned(
-            top: 0,
-            right: hPad - 36 > 8 ? hPad - 36 : 8,
-            child: const IgnorePointer(
-              child: Icon(Icons.bookmark, color: Color(0xFFD9534F), size: 30),
-            ),
-          ),
-        // Kindle-style footer: time left in chapter and overall progress.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 28,
-          child: IgnorePointer(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: hPad),
-              child: Row(children: [
-                Expanded(
-                  child: Text(_timeLeftLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: faint)),
+    return LayoutBuilder(
+      builder: (context, box) {
+        _viewport = box.maxHeight - 40;
+        _width = box.maxWidth;
+        // Text column: at most the chosen line width, and always leaving the
+        // chosen margin on each side.
+        final available = box.maxWidth - 2 * settings.margin;
+        final column = available < settings.lineWidth
+            ? available
+            : settings.lineWidth;
+        final hPad = column < 200
+            ? settings.margin
+            : (box.maxWidth - column) / 2;
+        return Stack(
+          children: [
+            Positioned.fill(
+              bottom: 28,
+              child: Listener(
+                onPointerDown: _pointerDown,
+                onPointerUp: _pointerUp,
+                child: ScrollablePositionedList.builder(
+                  key: ValueKey(_chapter),
+                  itemScrollController: _itemScroll,
+                  scrollOffsetController: _offsetScroll,
+                  itemPositionsListener: _positions,
+                  initialScrollIndex: _initialBlock,
+                  initialAlignment: _initialAlign,
+                  padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 24),
+                  itemCount: chapter.blocks.length + 1,
+                  itemBuilder: (context, i) {
+                    if (i >= chapter.blocks.length) {
+                      return _chapterEnd(book, rt);
+                    }
+                    final block = chapter.blocks[i];
+                    final marks =
+                        _searchNorm.isEmpty || block.type == BlockType.image
+                        ? const <(int, int)>[]
+                        : _searcher!.matchesIn(_chapter, i, _searchNorm);
+                    final bytes = block.image == null
+                        ? null
+                        : book.images[block.image];
+                    return BlockView(
+                      key: ValueKey('$_epochBase-${_blockEpoch[i] ?? 0}-$i'),
+                      block: block,
+                      settings: settings,
+                      imageBytes: bytes,
+                      maxImageHeight: _viewport * 0.8,
+                      highlights: notes.inBlock(_chapter, i),
+                      searchMarks: marks,
+                      activeMark:
+                          activeHit != null &&
+                              activeHit.chapter == _chapter &&
+                              activeHit.block == i
+                          ? (activeHit.start, activeHit.end)
+                          : null,
+                      actions: _actionsFor(i),
+                      onImageTap: bytes == null
+                          ? null
+                          : () {
+                              _suppressTap = true;
+                              showImageViewer(context, bytes, block.alt);
+                            },
+                    );
+                  },
                 ),
-                Text('${(_progress * 100).round()}%',
-                    style: TextStyle(fontSize: 11, color: faint)),
-              ]),
+              ),
             ),
-          ),
-        ),
-        if (_hits.isNotEmpty || _searchQuery.isNotEmpty) _searchBar(rt),
-        _topBar(rt),
-        _bottomBar(book, rt),
-      ]);
-    });
+            // Bookmark ribbon on the current page.
+            if (_currentBookmark != null)
+              Positioned(
+                top: 0,
+                right: hPad - 36 > 8 ? hPad - 36 : 8,
+                child: const IgnorePointer(
+                  child: Icon(
+                    Icons.bookmark,
+                    color: Color(0xFFD9534F),
+                    size: 30,
+                  ),
+                ),
+              ),
+            // Kindle-style footer: time left in chapter and overall progress.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 28,
+              child: IgnorePointer(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: hPad),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _timeLeftLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 11, color: faint),
+                        ),
+                      ),
+                      Text(
+                        '${(_progress * 100).round()}%',
+                        style: TextStyle(fontSize: 11, color: faint),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (_hits.isNotEmpty || _searchQuery.isNotEmpty) _searchBar(rt),
+            _topBar(rt),
+            _bottomBar(book, rt),
+          ],
+        );
+      },
+    );
   }
 
   Widget _searchBar(ReaderTheme rt) {
@@ -771,46 +880,57 @@ class _ReaderScreenState extends State<ReaderScreen> {
       left: 0,
       right: 0,
       child: Center(
-        child: ExcludeFocus(child: Material(
-          color: rt == ReaderTheme.dark ? const Color(0xFF2A2A2A) : Colors.white,
-          elevation: 4,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(
-                tooltip: 'Search',
-                icon: Icon(Icons.search, color: rt.foreground),
-                onPressed: _openSearch,
+        child: ExcludeFocus(
+          child: Material(
+            color: rt == ReaderTheme.dark
+                ? const Color(0xFF2A2A2A)
+                : Colors.white,
+            elevation: 4,
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: L10n.of(context).search,
+                    icon: Icon(Icons.search, color: rt.foreground),
+                    onPressed: _openSearch,
+                  ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 220),
+                    child: Text(
+                      _hits.isEmpty
+                          ? L10n.of(context).searchNoMatches(_searchQuery)
+                          : L10n.of(context).searchPosition(
+                              _searchQuery,
+                              _hitIndex + 1,
+                              _hits.length,
+                            ),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: rt.foreground),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: L10n.of(context).previousMatch,
+                    icon: Icon(Icons.keyboard_arrow_up, color: rt.foreground),
+                    onPressed: _hits.isEmpty ? null : () => _stepHit(-1),
+                  ),
+                  IconButton(
+                    tooltip: L10n.of(context).nextMatch,
+                    icon: Icon(Icons.keyboard_arrow_down, color: rt.foreground),
+                    onPressed: _hits.isEmpty ? null : () => _stepHit(1),
+                  ),
+                  IconButton(
+                    tooltip: L10n.of(context).closeSearch,
+                    icon: Icon(Icons.close, color: rt.foreground),
+                    onPressed: _closeSearch,
+                  ),
+                ],
               ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: Text(
-                  _hits.isEmpty
-                      ? '“$_searchQuery” · no matches'
-                      : '“$_searchQuery” · ${_hitIndex + 1} of ${_hits.length}',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: rt.foreground),
-                ),
-              ),
-              IconButton(
-                tooltip: 'Previous match',
-                icon: Icon(Icons.keyboard_arrow_up, color: rt.foreground),
-                onPressed: _hits.isEmpty ? null : () => _stepHit(-1),
-              ),
-              IconButton(
-                tooltip: 'Next match (F3)',
-                icon: Icon(Icons.keyboard_arrow_down, color: rt.foreground),
-                onPressed: _hits.isEmpty ? null : () => _stepHit(1),
-              ),
-              IconButton(
-                tooltip: 'Close search',
-                icon: Icon(Icons.close, color: rt.foreground),
-                onPressed: _closeSearch,
-              ),
-            ]),
+            ),
           ),
-        )),
+        ),
       ),
     );
   }
@@ -820,20 +940,34 @@ class _ReaderScreenState extends State<ReaderScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Center(
-        child: ExcludeFocus(child: isLast
-            ? Text('— The End —',
-                style: TextStyle(
+        child: ExcludeFocus(
+          child: isLast
+              ? Text(
+                  L10n.of(context).theEnd,
+                  style: TextStyle(
                     color: rt.foreground,
                     fontSize: 16,
                     fontFamily: _services.settings.font.families.first,
-                    fontFamilyFallback: _services.settings.font.families.skip(1).toList()))
-            : OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(foregroundColor: rt.foreground),
-                icon: const Icon(Icons.arrow_forward),
-                label: Text('Next: ${book.chapters[_chapter + 1].title}',
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                onPressed: () => _goToChapter(_chapter + 1),
-              )),
+                    fontFamilyFallback: _services.settings.font.families
+                        .skip(1)
+                        .toList(),
+                  ),
+                )
+              : OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: rt.foreground,
+                  ),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: Text(
+                    L10n.of(
+                      context,
+                    ).nextChapterTitle(book.chapters[_chapter + 1].title),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onPressed: () => _goToChapter(_chapter + 1),
+                ),
+        ),
       ),
     );
   }
@@ -847,49 +981,62 @@ class _ReaderScreenState extends State<ReaderScreen> {
       right: 0,
       // Toolbar controls never take keyboard focus: the reader handles keys
       // itself, and a focused slider would also react to the arrow keys.
-      child: ExcludeFocus(child: Material(
-        color: rt.background,
-        elevation: 3,
-        child: SizedBox(
-          height: 56,
-          child: Row(children: [
-            IconButton(
-              tooltip: 'Back to library',
-              icon: Icon(Icons.arrow_back, color: rt.foreground),
-              onPressed: () => Navigator.pop(context),
+      child: ExcludeFocus(
+        child: Material(
+          color: rt.background,
+          elevation: 3,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: L10n.of(context).backToLibrary,
+                  icon: Icon(Icons.arrow_back, color: rt.foreground),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                Expanded(
+                  child: Text(
+                    widget.entry.book.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: rt.foreground,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: L10n.of(context).searchInBookShortcut,
+                  icon: Icon(Icons.search, color: rt.foreground),
+                  onPressed: _openSearch,
+                ),
+                IconButton(
+                  tooltip: bookmarked
+                      ? L10n.of(context).removeBookmarkShortcut
+                      : L10n.of(context).bookmarkPageShortcut,
+                  icon: Icon(
+                    bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    color: bookmarked ? const Color(0xFFD9534F) : rt.foreground,
+                  ),
+                  onPressed: _toggleBookmark,
+                ),
+                IconButton(
+                  tooltip: L10n.of(context).contentsBookmarksNotes,
+                  icon: Icon(Icons.list, color: rt.foreground),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                IconButton(
+                  tooltip: L10n.of(context).displaySettings,
+                  icon: Icon(Icons.text_fields, color: rt.foreground),
+                  onPressed: _showDisplaySettings,
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
-            Expanded(
-              child: Text(widget.entry.book.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: rt.foreground, fontSize: 16, fontWeight: FontWeight.w600)),
-            ),
-            IconButton(
-              tooltip: 'Search in book (Ctrl+F)',
-              icon: Icon(Icons.search, color: rt.foreground),
-              onPressed: _openSearch,
-            ),
-            IconButton(
-              tooltip: bookmarked ? 'Remove bookmark (Ctrl+B)' : 'Bookmark this page (Ctrl+B)',
-              icon: Icon(bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  color: bookmarked ? const Color(0xFFD9534F) : rt.foreground),
-              onPressed: _toggleBookmark,
-            ),
-            IconButton(
-              tooltip: 'Contents, bookmarks & notes',
-              icon: Icon(Icons.list, color: rt.foreground),
-              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
-            IconButton(
-              tooltip: 'Display settings',
-              icon: Icon(Icons.text_fields, color: rt.foreground),
-              onPressed: _showDisplaySettings,
-            ),
-            const SizedBox(width: 4),
-          ]),
+          ),
         ),
-      )),
+      ),
     );
   }
 
@@ -897,14 +1044,20 @@ class _ReaderScreenState extends State<ReaderScreen> {
   /// otherwise the EPUB's files.
   List<TocEntry> _sections(ParsedBook book) => book.toc.length > 1
       ? book.toc
-      : [for (var i = 0; i < book.chapters.length; i++) TocEntry(book.chapters[i].title, i, 0)];
+      : [
+          for (var i = 0; i < book.chapters.length; i++)
+            TocEntry(book.chapters[i].title, i, 0),
+        ];
 
   int _sectionIndex(ParsedBook book) {
     final sections = _sections(book);
     var found = 0;
     for (var i = 0; i < sections.length; i++) {
       final t = sections[i];
-      if (t.chapter < _chapter || (t.chapter == _chapter && t.block <= _block)) found = i;
+      if (t.chapter < _chapter ||
+          (t.chapter == _chapter && t.block <= _block)) {
+        found = i;
+      }
     }
     return found;
   }
@@ -925,47 +1078,67 @@ class _ReaderScreenState extends State<ReaderScreen> {
       bottom: _chrome ? 0 : -110,
       left: 0,
       right: 0,
-      child: ExcludeFocus(child: Material(
-        color: rt.background,
-        elevation: 3,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Row(children: [
-              IconButton(
-                tooltip: 'Previous chapter',
-                icon: Icon(Icons.skip_previous, color: rt.foreground),
-                onPressed: current > 0 ? () => _goToSection(book, current - 1) : null,
-              ),
-              Expanded(
-                child: n > 1
-                    ? Slider(
-                        value: current.toDouble(),
-                        max: (n - 1).toDouble(),
-                        divisions: n - 1,
-                        label: sections[current].title,
-                        onChanged: (v) {
-                          if (v.round() != current) _goToSection(book, v.round());
-                        },
-                      )
-                    : const SizedBox(),
-              ),
-              IconButton(
-                tooltip: 'Next chapter',
-                icon: Icon(Icons.skip_next, color: rt.foreground),
-                onPressed: current < n - 1 ? () => _goToSection(book, current + 1) : null,
-              ),
-            ]),
-            Text(
-              '${sections[current].title}  ·  Chapter ${current + 1} of $n  ·  '
-              '${(_progress * 100).round()}% read',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: rt.foreground.withValues(alpha: 0.7), fontSize: 12),
+      child: ExcludeFocus(
+        child: Material(
+          color: rt.background,
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: L10n.of(context).previousChapter,
+                      icon: Icon(Icons.skip_previous, color: rt.foreground),
+                      onPressed: current > 0
+                          ? () => _goToSection(book, current - 1)
+                          : null,
+                    ),
+                    Expanded(
+                      child: n > 1
+                          ? Slider(
+                              value: current.toDouble(),
+                              max: (n - 1).toDouble(),
+                              divisions: n - 1,
+                              label: sections[current].title,
+                              onChanged: (v) {
+                                if (v.round() != current) {
+                                  _goToSection(book, v.round());
+                                }
+                              },
+                            )
+                          : const SizedBox(),
+                    ),
+                    IconButton(
+                      tooltip: L10n.of(context).nextChapter,
+                      icon: Icon(Icons.skip_next, color: rt.foreground),
+                      onPressed: current < n - 1
+                          ? () => _goToSection(book, current + 1)
+                          : null,
+                    ),
+                  ],
+                ),
+                Text(
+                  L10n.of(context).chapterStatus(
+                    sections[current].title,
+                    current + 1,
+                    n,
+                    (_progress * 100).round(),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: rt.foreground.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
-          ]),
+          ),
         ),
-      )),
+      ),
     );
   }
 
@@ -991,7 +1164,9 @@ class _SearchSheetState extends State<_SearchSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialQuery.isNotEmpty) _hits = widget.searcher.search(widget.initialQuery);
+    if (widget.initialQuery.isNotEmpty) {
+      _hits = widget.searcher.search(widget.initialQuery);
+    }
   }
 
   @override
@@ -1015,62 +1190,81 @@ class _SearchSheetState extends State<_SearchSheet> {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.8,
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: TextField(
-              controller: _ctrl,
-              autofocus: true,
-              onChanged: _changed,
-              onSubmitted: (q) {
-                final hits = widget.searcher.search(q);
-                if (hits.isNotEmpty) Navigator.pop(context, (q, hits, 0));
-              },
-              decoration: InputDecoration(
-                hintText: 'Search in this book',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: TextField(
+                controller: _ctrl,
+                autofocus: true,
+                onChanged: _changed,
+                onSubmitted: (q) {
+                  final hits = widget.searcher.search(q);
+                  if (hits.isNotEmpty) Navigator.pop(context, (q, hits, 0));
+                },
+                decoration: InputDecoration(
+                  hintText: L10n.of(context).searchInThisBook,
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _ctrl.text.trim().length < 2
-                    ? 'Type at least two letters.'
-                    : '${_hits.length}${_hits.length >= 2000 ? '+' : ''} matches',
-                style: theme.textTheme.labelMedium,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _ctrl.text.trim().length < 2
+                      ? L10n.of(context).typeTwoLetters
+                      : _hits.length >= 2000
+                      ? L10n.of(context).matchesMany(_hits.length)
+                      : L10n.of(context).matchesCount(_hits.length),
+                  style: theme.textTheme.labelMedium,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.separated(
-              itemCount: _hits.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) {
-                final h = _hits[i];
-                final s = widget.searcher.snippet(h);
-                return ListTile(
-                  title: Text.rich(TextSpan(children: [
-                    TextSpan(text: s.text.substring(0, s.start)),
-                    TextSpan(
-                        text: s.text.substring(s.start, s.end),
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            backgroundColor: const Color(0xFFFF9800).withValues(alpha: 0.3))),
-                    TextSpan(text: s.text.substring(s.end)),
-                  ])),
-                  subtitle: Text(book.chapters[h.chapter].title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onTap: () => Navigator.pop(context, (_ctrl.text, _hits, i)),
-                );
-              },
+            Expanded(
+              child: ListView.separated(
+                itemCount: _hits.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, i) {
+                  final h = _hits[i];
+                  final s = widget.searcher.snippet(h);
+                  return ListTile(
+                    title: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(text: s.text.substring(0, s.start)),
+                          TextSpan(
+                            text: s.text.substring(s.start, s.end),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              backgroundColor: const Color(
+                                0xFFFF9800,
+                              ).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          TextSpan(text: s.text.substring(s.end)),
+                        ],
+                      ),
+                    ),
+                    subtitle: Text(
+                      book.chapters[h.chapter].title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => Navigator.pop(context, (_ctrl.text, _hits, i)),
+                  );
+                },
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }

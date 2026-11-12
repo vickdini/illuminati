@@ -41,10 +41,12 @@ class LibraryService extends ChangeNotifier {
   File get _indexFile => File(p.join(_root.path, 'library.json'));
 
   /// Every library entry, most recently read first.
-  List<LibraryEntry> get entries => sortEntries(_entries.values, LibrarySort.recent);
+  List<LibraryEntry> get entries =>
+      sortEntries(_entries.values, LibrarySort.recent);
 
   /// Downloaded books only, most recently read first (the home screen row).
-  List<LibraryEntry> get downloaded => entries.where((e) => e.isDownloaded).toList();
+  List<LibraryEntry> get downloaded =>
+      entries.where((e) => e.isDownloaded).toList();
 
   List<Shelf> get shelves => List.unmodifiable(_shelves);
 
@@ -95,7 +97,9 @@ class LibraryService extends ChangeNotifier {
     for (final item in rawEntries) {
       final e = LibraryEntry.fromJson((item as Map).cast<String, dynamic>());
       // A deleted or moved file just makes the book "not downloaded".
-      if (e.epubPath != null && !File(e.epubPath!).existsSync()) e.epubPath = null;
+      if (e.epubPath != null && !File(e.epubPath!).existsSync()) {
+        e.epubPath = null;
+      }
       _entries[e.book.id] = e;
     }
     for (final s in rawShelves) {
@@ -107,10 +111,10 @@ class LibraryService extends ChangeNotifier {
 
   @visibleForTesting
   Map<String, dynamic> toJson() => {
-        'version': 2,
-        'entries': _entries.values.map((e) => e.toJson()).toList(),
-        'shelves': _shelves.map((s) => s.toJson()).toList(),
-      };
+    'version': 2,
+    'entries': _entries.values.map((e) => e.toJson()).toList(),
+    'shelves': _shelves.map((s) => s.toJson()).toList(),
+  };
 
   Future<void> _saving = Future.value();
 
@@ -118,7 +122,8 @@ class LibraryService extends ChangeNotifier {
   Future<void> get saved => _saving;
 
   /// Queues a write of library.json, so overlapping saves never collide.
-  Future<void> _save() => _saving = _saving.then((_) => _write()).catchError((Object e) {
+  Future<void> _save() =>
+      _saving = _saving.then((_) => _write()).catchError((Object e) {
         debugPrint('Could not save library: $e');
       });
 
@@ -137,21 +142,33 @@ class LibraryService extends ChangeNotifier {
 
   /// Entries shown in a [LibraryView], optionally narrowed by [filter]
   /// (matches title or author, ignoring case and accents).
-  List<LibraryEntry> entriesIn(String view, {LibrarySort sort = LibrarySort.recent, String filter = ''}) {
+  List<LibraryEntry> entriesIn(
+    String view, {
+    LibrarySort sort = LibrarySort.recent,
+    String filter = '',
+  }) {
     Iterable<LibraryEntry> list = _entries.values;
     if (view.startsWith('shelf:')) {
       final shelf = _shelves.where((s) => 'shelf:${s.id}' == view).firstOrNull;
-      list = shelf == null ? const [] : shelf.bookIds.map((id) => _entries[id]).whereType<LibraryEntry>();
+      list = shelf == null
+          ? const []
+          : shelf.bookIds.map((id) => _entries[id]).whereType<LibraryEntry>();
     } else {
       list = switch (view) {
         LibraryView.downloaded => list.where((e) => e.isDownloaded),
-        LibraryView.wantToRead => list.where((e) => e.status == ReadingStatus.wantToRead),
+        LibraryView.wantToRead => list.where(
+          (e) => e.status == ReadingStatus.wantToRead,
+        ),
         LibraryView.reading => list.where((e) => e.isReading),
-        LibraryView.finished => list.where((e) => e.status == ReadingStatus.finished),
+        LibraryView.finished => list.where(
+          (e) => e.status == ReadingStatus.finished,
+        ),
         _ => list,
       };
     }
-    final words = fold(filter).split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final words = fold(
+      filter,
+    ).split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     if (words.isNotEmpty) {
       list = list.where((e) {
         final text = fold('${e.book.title} ${e.book.authorLine}');
@@ -163,9 +180,13 @@ class LibraryService extends ChangeNotifier {
 
   int countIn(String view) => entriesIn(view).length;
 
-  static List<LibraryEntry> sortEntries(Iterable<LibraryEntry> entries, LibrarySort sort) {
+  static List<LibraryEntry> sortEntries(
+    Iterable<LibraryEntry> entries,
+    LibrarySort sort,
+  ) {
     final list = entries.toList();
-    int byTitle(LibraryEntry a, LibraryEntry b) => _titleKey(a.book.title).compareTo(_titleKey(b.book.title));
+    int byTitle(LibraryEntry a, LibraryEntry b) =>
+        _titleKey(a.book.title).compareTo(_titleKey(b.book.title));
     DateTime recent(LibraryEntry e) => e.lastOpened ?? e.addedAt;
     list.sort((a, b) {
       final c = switch (sort) {
@@ -182,14 +203,21 @@ class LibraryService extends ChangeNotifier {
 
   /// "The Time Machine" sorts under T for "Time", as in a bookshop.
   static String _titleKey(String title) => fold(title)
-      .replaceFirst(RegExp(r"^(the|a|an|el|la|los|las|le|les|l'|il|lo|gli|die|der|das|o|os|as) "), '')
+      .replaceFirst(
+        RegExp(
+          r"^(the|a|an|el|la|los|las|le|les|l'|il|lo|gli|die|der|das|o|os|as) ",
+        ),
+        '',
+      )
       .replaceAll(RegExp(r'[^\p{L}\p{N} ]', unicode: true), '')
       .trim();
 
   /// By surname: "Jane Austen" -> "austen jane"; unknown authors sort last.
   static String _authorKey(Book book) {
     if (book.authors.isEmpty) return '￿';
-    final parts = fold(book.authors.first).split(' ').where((w) => w.isNotEmpty).toList();
+    final parts = fold(
+      book.authors.first,
+    ).split(' ').where((w) => w.isNotEmpty).toList();
     if (parts.length < 2) return parts.join();
     return '${parts.last} ${parts.sublist(0, parts.length - 1).join(' ')}';
   }
@@ -237,7 +265,8 @@ class LibraryService extends ChangeNotifier {
     _changed();
   }
 
-  List<Shelf> shelvesOf(int bookId) => _shelves.where((s) => s.contains(bookId)).toList();
+  List<Shelf> shelvesOf(int bookId) =>
+      _shelves.where((s) => s.contains(bookId)).toList();
 
   /// Puts [book] on [shelf] (adding it to the library if needed), or takes
   /// it off.
@@ -277,11 +306,11 @@ class LibraryService extends ChangeNotifier {
         }
       }
       if (replace && book.epubUrl == previousUrl) {
-        throw CatalogException('There is no other edition of this book.');
+        throw const CatalogException(ErrorCode.noOtherEdition);
       }
       final url = book.epubUrl;
       if (url == null) {
-        throw CatalogException('This title has no e-book edition (it may be an audio book).');
+        throw const CatalogException(ErrorCode.noEpub);
       }
       final req = http.Request('GET', Uri.parse(url))
         ..headers['User-Agent'] = CatalogService.userAgent;
@@ -290,16 +319,18 @@ class LibraryService extends ChangeNotifier {
       try {
         res = await client.send(req).timeout(const Duration(seconds: 150));
       } on TimeoutException {
-        throw CatalogException(book.source == 'wikisource'
-            ? _wikisourceTooBig
-            : 'The download took too long. Check your connection and try again.');
+        throw CatalogException(
+          book.source == 'wikisource'
+              ? ErrorCode.wikisourceTooLong
+              : ErrorCode.downloadTimeout,
+        );
       }
       if (res.statusCode != 200) {
         // WS Export gives up on very long works (e.g. multi-volume novels).
         if (book.source == 'wikisource' && res.statusCode >= 500) {
-          throw CatalogException(_wikisourceTooBig);
+          throw const CatalogException(ErrorCode.wikisourceTooLong);
         }
-        throw CatalogException('Download failed (${res.statusCode}).');
+        throw CatalogException(ErrorCode.downloadHttp, status: res.statusCode);
       }
       final total = res.contentLength;
       var received = 0;
@@ -319,7 +350,7 @@ class LibraryService extends ChangeNotifier {
       // An EPUB is a ZIP archive and must start with "PK".
       final head = await partFile.openRead(0, 2).first;
       if (head.length < 2 || head[0] != 0x50 || head[1] != 0x4B) {
-        throw CatalogException('The downloaded file is not a valid EPUB.');
+        throw const CatalogException(ErrorCode.invalidEpub);
       }
       await partFile.rename(epubFile.path);
 
@@ -327,8 +358,10 @@ class LibraryService extends ChangeNotifier {
       if (book.coverUrl != null) {
         try {
           final c = await client
-              .get(Uri.parse(book.coverUrl!),
-                  headers: {'User-Agent': CatalogService.userAgent})
+              .get(
+                Uri.parse(book.coverUrl!),
+                headers: {'User-Agent': CatalogService.userAgent},
+              )
               .timeout(const Duration(seconds: 30));
           if (c.statusCode == 200) {
             final f = File(p.join(_root.path, 'covers', '${book.id}.jpg'));
@@ -365,10 +398,6 @@ class LibraryService extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  static const _wikisourceTooBig =
-      'Wikisource could not prepare this book: it is too long for their EPUB '
-      'service. Try one of its volumes, or look for it in another catalog.';
 
   /// Deletes the downloaded file to free space; the book stays in the
   /// library with its status, shelves, notes and reading position.
@@ -407,11 +436,13 @@ class LibraryService extends ChangeNotifier {
     _changed();
   }
 
-  Future<void> saveProgress(int id,
-      {required int chapter,
-      required int block,
-      required double progress,
-      String anchor = ''}) async {
+  Future<void> saveProgress(
+    int id, {
+    required int chapter,
+    required int block,
+    required double progress,
+    String anchor = '',
+  }) async {
     final e = _entries[id];
     if (e == null) return;
     e

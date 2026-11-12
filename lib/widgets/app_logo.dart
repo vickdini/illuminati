@@ -7,10 +7,10 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Image.asset(
-        'assets/icon/app_icon.png',
-        width: size,
-        height: size,
-        filterQuality: FilterQuality.medium,
-        semanticLabel: 'Illuminati',
-      );
+    'assets/icon/app_icon.png',
+    width: size,
+    height: size,
+    filterQuality: FilterQuality.medium,
+    semanticLabel: 'Illuminati',
+  );
 }

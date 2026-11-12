@@ -14,14 +14,13 @@ class StandardEbooksSource extends BookSource {
   static const site = 'https://standardebooks.org';
 
   final http.Client _client;
-  StandardEbooksSource([http.Client? client]) : _client = client ?? http.Client();
+  StandardEbooksSource([http.Client? client])
+    : _client = client ?? http.Client();
 
   @override
   String get id => 'standardebooks';
   @override
   String get name => 'Standard Ebooks';
-  @override
-  String get tagline => 'Beautifully typeset, carefully proofread classics';
 
   /// Home-screen categories (Gutenberg subjects) -> Standard Ebooks subjects.
   static const _subjects = {
@@ -40,17 +39,26 @@ class StandardEbooksSource extends BookSource {
 
   @override
   bool supports({required String language, required String subject}) =>
-      (language.isEmpty || language == 'en') && (subject.isEmpty || _subjects.containsKey(subject));
+      (language.isEmpty || language == 'en') &&
+      (subject.isEmpty || _subjects.containsKey(subject));
 
   final _cache = FeaturedCache();
 
   @override
-  Future<List<Book>> featured({required String language, required String subject}) =>
-      _cache.get(subject, () => _list({'sort': 'popularity', 'per-page': '24', ..._tag(subject)}));
+  Future<List<Book>> featured({
+    required String language,
+    required String subject,
+  }) => _cache.get(
+    subject,
+    () => _list({'sort': 'popularity', 'per-page': '24', ..._tag(subject)}),
+  );
 
   @override
-  Future<List<Book>> search(String query, {required String language, required String subject}) =>
-      _list({'query': plainQuery(query), 'per-page': '24', ..._tag(subject)});
+  Future<List<Book>> search(
+    String query, {
+    required String language,
+    required String subject,
+  }) => _list({'query': plainQuery(query), 'per-page': '24', ..._tag(subject)});
 
   Map<String, String> _tag(String subject) =>
       _subjects[subject] == null ? const {} : {'tags[]': _subjects[subject]!};
@@ -81,17 +89,19 @@ class StandardEbooksSource extends BookSource {
           .where((a) => a.isNotEmpty)
           .toList();
       final img = li.querySelector('img')?.attributes['src'];
-      books.add(Book(
-        id: Book.stableId('standardebooks', path),
-        source: 'standardebooks',
-        sourceId: path,
-        title: title,
-        authors: authors,
-        languages: const ['en'],
-        coverUrl: img == null ? null : _absolute(img),
-        epubUrl: _guessEpub(path),
-        webUrl: '$site$path',
-      ));
+      books.add(
+        Book(
+          id: Book.stableId('standardebooks', path),
+          source: 'standardebooks',
+          sourceId: path,
+          title: title,
+          authors: authors,
+          languages: const ['en'],
+          coverUrl: img == null ? null : _absolute(img),
+          epubUrl: _guessEpub(path),
+          webUrl: '$site$path',
+        ),
+      );
     }
     return books;
   }
@@ -100,18 +110,25 @@ class StandardEbooksSource extends BookSource {
   /// The exact name is read from the book page in [details]; this guess is
   /// right for most books.
   static String _guessEpub(String path) {
-    final parts = path.substring('/ebooks/'.length).split('/').map((s) => s.replaceAll('_', '-'));
+    final parts = path
+        .substring('/ebooks/'.length)
+        .split('/')
+        .map((s) => s.replaceAll('_', '-'));
     return '$site$path/downloads/${parts.join('_')}.epub?source=download';
   }
 
-  static String _absolute(String url) => url.startsWith('http') ? url : '$site$url';
+  static String _absolute(String url) =>
+      url.startsWith('http') ? url : '$site$url';
 
   @override
   Future<Book> details(Book book) async {
     final path = book.sourceId;
     if (path == null) return book;
     final res = await sourceGet(_client, Uri.parse('$site$path'));
-    return parseBookPage(book, utf8.decode(res.bodyBytes, allowMalformed: true));
+    return parseBookPage(
+      book,
+      utf8.decode(res.bodyBytes, allowMalformed: true),
+    );
   }
 
   static Book parseBookPage(Book book, String htmlText) {
@@ -122,13 +139,20 @@ class StandardEbooksSource extends BookSource {
     final epub = doc
         .querySelectorAll('a[href]')
         .map((a) => a.attributes['href']!)
-        .where((h) => h.endsWith('.epub') && !h.endsWith('.kepub.epub') && !h.contains('_advanced'))
+        .where(
+          (h) =>
+              h.endsWith('.epub') &&
+              !h.endsWith('.kepub.epub') &&
+              !h.contains('_advanced'),
+        )
         .firstOrNull;
 
     String? summary;
     final description = doc.querySelector('section#description');
     if (description != null) {
-      description.querySelectorAll('aside').forEach((a) => a.remove()); // donation appeal
+      description
+          .querySelectorAll('aside')
+          .forEach((a) => a.remove()); // donation appeal
       final paragraphs = description
           .querySelectorAll('p')
           .map((p) => p.text.replaceAll(RegExp(r'\s+'), ' ').trim())
@@ -148,10 +172,4 @@ class StandardEbooksSource extends BookSource {
       subjects: subjects.isEmpty ? null : subjects,
     );
   }
-
-  @override
-  String rightsNote(Book book) =>
-      'From Standard Ebooks, whose editions are in the public domain in the United '
-      'States and dedicated to the public domain (CC0) for their own changes. '
-      'Copyright terms differ between countries, so check your local laws.';
 }

@@ -1,0 +1,816 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class L10nEn extends L10n {
+  L10nEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get unknownAuthor => 'Unknown author';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get displayAccessibility => 'Display & accessibility';
+
+  @override
+  String get aboutText =>
+      'Illuminati lets you find, download and read books that were never under copyright or whose copyright has expired.\n\nBooks come from Project Gutenberg (gutenberg.org), Standard Ebooks (standardebooks.org), Wikisource (wikisource.org, as EPUBs made by WS Export) and the Internet Archive (archive.org). They are in the public domain in the United States, except some Wikisource texts that are under free licences. Copyright terms differ between countries, so check your local laws before downloading.\n\nWord definitions come from Wiktionary and translations from MyMemory; the selected text is sent to those services.';
+
+  @override
+  String get discoverFreeBooks => 'Discover free books';
+
+  @override
+  String get discoverSubtitle =>
+      'Classics whose copyright has expired, free to download and keep.';
+
+  @override
+  String get searchHint => 'Search by title or author';
+
+  @override
+  String get catalogLanguage => 'Catalog language';
+
+  @override
+  String get allLanguages => 'All languages';
+
+  @override
+  String get gutenbergSubtitle =>
+      'The largest free library: over 75,000 public-domain books';
+
+  @override
+  String get noBooksFound => 'No books found. Try another search.';
+
+  @override
+  String get catalogTimeout => 'The catalog is taking too long to respond.';
+
+  @override
+  String get catalogOffline =>
+      'Could not load the catalog. Check your internet connection.';
+
+  @override
+  String couldNotReach(String source) {
+    return 'Couldn’t reach $source.';
+  }
+
+  @override
+  String get downloadFree => 'Download free';
+
+  @override
+  String get yourLibrary => 'Your library';
+
+  @override
+  String libraryAndShelves(int count) {
+    return 'Library & shelves ($count)';
+  }
+
+  @override
+  String get libraryEmptyHome =>
+      'Your library is empty. Books you download from the catalog below will appear here, ready to read offline.';
+
+  @override
+  String noDownloadedSaved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'No downloaded books. Your $count saved books are in Library & shelves.',
+      one: 'No downloaded books. Your saved book is in Library & shelves.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get catPopular => 'Popular';
+
+  @override
+  String get catFiction => 'Fiction';
+
+  @override
+  String get catMystery => 'Mystery';
+
+  @override
+  String get catAdventure => 'Adventure';
+
+  @override
+  String get catScienceFiction => 'Science Fiction';
+
+  @override
+  String get catRomance => 'Romance';
+
+  @override
+  String get catHorror => 'Horror';
+
+  @override
+  String get catFantasy => 'Fantasy';
+
+  @override
+  String get catChildren => 'Children';
+
+  @override
+  String get catPoetry => 'Poetry';
+
+  @override
+  String get catDrama => 'Drama';
+
+  @override
+  String get catPhilosophy => 'Philosophy';
+
+  @override
+  String get catHistory => 'History';
+
+  @override
+  String get catScience => 'Science';
+
+  @override
+  String get catBiography => 'Biography';
+
+  @override
+  String get taglineStandardEbooks =>
+      'Beautifully typeset, carefully proofread classics';
+
+  @override
+  String get taglineWikisource =>
+      'Volunteer-transcribed texts in many languages';
+
+  @override
+  String get taglineArchive =>
+      'Scans of old printed editions (text made by OCR)';
+
+  @override
+  String rightsGutenberg(int id) {
+    return 'From Project Gutenberg (ebook #$id). This book is in the public domain in the United States. Copyright terms differ between countries, so check your local laws before downloading.';
+  }
+
+  @override
+  String get rightsStandardEbooks =>
+      'From Standard Ebooks, whose editions are in the public domain in the United States and dedicated to the public domain (CC0) for their own changes. Copyright terms differ between countries, so check your local laws.';
+
+  @override
+  String get rightsWikisource =>
+      'From Wikisource, transcribed by volunteers; the EPUB is generated by WS Export. Wikisource hosts public-domain texts and some under free licences (such as CC BY-SA), which allow free reading and sharing. Check your local laws.';
+
+  @override
+  String rightsArchive(String year) {
+    return 'From the Internet Archive. Only books published in $year or earlier are listed, so they are in the public domain in the United States. The EPUB text was made automatically from page scans and may contain errors. Copyright terms differ between countries, so check your local laws.';
+  }
+
+  @override
+  String addedToLibrary(String title) {
+    return '“$title” added to your library';
+  }
+
+  @override
+  String couldNotDownload(String title, String error) {
+    return 'Could not download “$title”: $error';
+  }
+
+  @override
+  String get removeFromLibraryQuestion => 'Remove from library?';
+
+  @override
+  String removeFromLibraryBody(String title) {
+    return '“$title” will be removed from your library and shelves, with its notes, highlights and bookmarks. You can download it again at any time.';
+  }
+
+  @override
+  String get continueReading => 'Continue reading';
+
+  @override
+  String get readNow => 'Read now';
+
+  @override
+  String get downloading => 'Downloading…';
+
+  @override
+  String downloadingPercent(int percent) {
+    return 'Downloading $percent%';
+  }
+
+  @override
+  String get noEbookEdition => 'No e-book edition';
+
+  @override
+  String get freeToRead => 'Free to read';
+
+  @override
+  String get publicDomain => 'Public domain';
+
+  @override
+  String downloadsCount(String count) {
+    return '$count downloads';
+  }
+
+  @override
+  String get getIllustratedEdition => 'Get illustrated edition';
+
+  @override
+  String get illustratedDownloaded => 'Illustrated edition downloaded';
+
+  @override
+  String get removeDownload => 'Remove download';
+
+  @override
+  String get removeFromLibrary => 'Remove from library';
+
+  @override
+  String get aboutThisBook => 'About this book';
+
+  @override
+  String get subjects => 'Subjects';
+
+  @override
+  String get wantToRead => 'Want to read';
+
+  @override
+  String get finished => 'Finished';
+
+  @override
+  String get addToShelf => 'Add to shelf';
+
+  @override
+  String onShelf(String name) {
+    return 'On “$name”';
+  }
+
+  @override
+  String onShelves(int count) {
+    return 'On $count shelves';
+  }
+
+  @override
+  String get newShelf => 'New shelf';
+
+  @override
+  String get newShelfEllipsis => 'New shelf…';
+
+  @override
+  String get shelfNameHint => 'e.g. Favorites, Philosophy, To read';
+
+  @override
+  String get renameShelf => 'Rename shelf';
+
+  @override
+  String get deleteShelf => 'Delete shelf';
+
+  @override
+  String deleteShelfQuestion(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get deleteShelfBody =>
+      'The shelf is deleted; its books stay in your library.';
+
+  @override
+  String get noShelvesYet =>
+      'You have no shelves yet. Create one to group books any way you like.';
+
+  @override
+  String bookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bookDetails => 'Book details';
+
+  @override
+  String get addToShelfEllipsis => 'Add to shelf…';
+
+  @override
+  String get removeFromWantToRead => 'Remove from Want to read';
+
+  @override
+  String get markNotFinished => 'Mark as not finished';
+
+  @override
+  String get markFinished => 'Mark as finished';
+
+  @override
+  String downloadRemoved(String title) {
+    return 'Download removed. “$title” stays in your library with your notes and place.';
+  }
+
+  @override
+  String get sort => 'Sort';
+
+  @override
+  String get filterHint => 'Filter by title or author';
+
+  @override
+  String get viewAll => 'All';
+
+  @override
+  String get viewDownloaded => 'Downloaded';
+
+  @override
+  String get viewReading => 'Reading';
+
+  @override
+  String get shelfHint =>
+      'Right-click or long-press a shelf to rename or delete it. Add books with “Add to shelf” on any book.';
+
+  @override
+  String noBooksMatch(String query) {
+    return 'No books match “$query”.';
+  }
+
+  @override
+  String get emptyShelf =>
+      'This shelf is empty.\nOpen any book and choose “Add to shelf”.';
+
+  @override
+  String get emptyDownloaded => 'No downloaded books.';
+
+  @override
+  String get emptyWantToRead =>
+      'Nothing here yet.\nMark books as “Want to read” from the catalog; they are saved without downloading.';
+
+  @override
+  String get emptyReading => 'You are not in the middle of any book.';
+
+  @override
+  String get emptyFinished => 'Books you finish appear here.';
+
+  @override
+  String get emptyLibrary => 'Your library is empty.';
+
+  @override
+  String get sortRecent => 'Recently read';
+
+  @override
+  String get sortTitle => 'Title';
+
+  @override
+  String get sortAuthor => 'Author';
+
+  @override
+  String get sortProgress => 'Progress';
+
+  @override
+  String get sortAdded => 'Recently added';
+
+  @override
+  String get tileNew => 'New';
+
+  @override
+  String get notDownloaded => 'Not downloaded';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get writeNote => 'Write a note…';
+
+  @override
+  String get removeHighlight => 'Remove highlight';
+
+  @override
+  String get contents => 'Contents';
+
+  @override
+  String bookmarksCount(int count) {
+    return 'Bookmarks ($count)';
+  }
+
+  @override
+  String notesCount(int count) {
+    return 'Notes ($count)';
+  }
+
+  @override
+  String get unknownChapter => 'Unknown chapter';
+
+  @override
+  String get noBookmarks =>
+      'No bookmarks yet.\nUse the bookmark button in the toolbar (or Ctrl+B).';
+
+  @override
+  String get bookmark => 'Bookmark';
+
+  @override
+  String get deleteBookmark => 'Delete bookmark';
+
+  @override
+  String get noHighlights =>
+      'No highlights yet.\nSelect text and choose Highlight or Note. On a computer, right-click the selection.';
+
+  @override
+  String get copyAllMarkdown => 'Copy all as Markdown';
+
+  @override
+  String get notesCopied => 'Notes copied to the clipboard';
+
+  @override
+  String get editNote => 'Edit note';
+
+  @override
+  String get addNote => 'Add note';
+
+  @override
+  String get editHighlight => 'Edit highlight';
+
+  @override
+  String get highlight => 'Highlight';
+
+  @override
+  String get define => 'Define';
+
+  @override
+  String get translate => 'Translate';
+
+  @override
+  String get closeImage => 'Close image';
+
+  @override
+  String bookOpenError(String error) {
+    return 'This book could not be opened.\n$error';
+  }
+
+  @override
+  String get lessThanMinuteLeft => 'Less than a minute left in chapter';
+
+  @override
+  String minutesLeft(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min left in chapter',
+      one: '1 min left in chapter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hoursMinutesLeft(int hours, int minutes) {
+    return '$hours h $minutes min left in chapter';
+  }
+
+  @override
+  String finishedBook(String title) {
+    return 'You finished “$title”. It’s now on your Finished list.';
+  }
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String searchNoMatches(String query) {
+    return '“$query” · no matches';
+  }
+
+  @override
+  String searchPosition(String query, int index, int total) {
+    return '“$query” · $index of $total';
+  }
+
+  @override
+  String get previousMatch => 'Previous match';
+
+  @override
+  String get nextMatch => 'Next match (F3)';
+
+  @override
+  String get closeSearch => 'Close search';
+
+  @override
+  String get theEnd => '— The End —';
+
+  @override
+  String nextChapterTitle(String title) {
+    return 'Next: $title';
+  }
+
+  @override
+  String get backToLibrary => 'Back to library';
+
+  @override
+  String get searchInBookShortcut => 'Search in book (Ctrl+F)';
+
+  @override
+  String get removeBookmarkShortcut => 'Remove bookmark (Ctrl+B)';
+
+  @override
+  String get bookmarkPageShortcut => 'Bookmark this page (Ctrl+B)';
+
+  @override
+  String get contentsBookmarksNotes => 'Contents, bookmarks & notes';
+
+  @override
+  String get displaySettings => 'Display settings';
+
+  @override
+  String get previousChapter => 'Previous chapter';
+
+  @override
+  String get nextChapter => 'Next chapter';
+
+  @override
+  String chapterStatus(String title, int index, int total, int percent) {
+    return '$title  ·  Chapter $index of $total  ·  $percent% read';
+  }
+
+  @override
+  String get searchInThisBook => 'Search in this book';
+
+  @override
+  String get typeTwoLetters => 'Type at least two letters.';
+
+  @override
+  String matchesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+      zero: 'No matches',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String matchesMany(int count) {
+    return '$count+ matches';
+  }
+
+  @override
+  String get translation => 'Translation';
+
+  @override
+  String get noDefinition => 'No definition found.';
+
+  @override
+  String get translateInstead => 'Translate instead';
+
+  @override
+  String get definitionsCredit =>
+      'Definitions from Wiktionary (CC BY-SA), written in English.';
+
+  @override
+  String get translateInto => 'Into:';
+
+  @override
+  String get alreadyInLanguage =>
+      'This book is already in that language. Choose another one above.';
+
+  @override
+  String get translationCredit =>
+      'Translations by MyMemory. Selected text is sent to their service.';
+
+  @override
+  String get langAr => 'Arabic';
+
+  @override
+  String get langZh => 'Chinese';
+
+  @override
+  String get langNl => 'Dutch';
+
+  @override
+  String get langEn => 'English';
+
+  @override
+  String get langFr => 'French';
+
+  @override
+  String get langDe => 'German';
+
+  @override
+  String get langEl => 'Greek';
+
+  @override
+  String get langHe => 'Hebrew';
+
+  @override
+  String get langHi => 'Hindi';
+
+  @override
+  String get langIt => 'Italian';
+
+  @override
+  String get langJa => 'Japanese';
+
+  @override
+  String get langKo => 'Korean';
+
+  @override
+  String get langPl => 'Polish';
+
+  @override
+  String get langPt => 'Portuguese';
+
+  @override
+  String get langRu => 'Russian';
+
+  @override
+  String get langEs => 'Spanish';
+
+  @override
+  String get langSv => 'Swedish';
+
+  @override
+  String get langTr => 'Turkish';
+
+  @override
+  String get appLanguage => 'App language';
+
+  @override
+  String get sameAsDevice => 'Same as device';
+
+  @override
+  String get previewText =>
+      'It was the best of times, it was the worst of times; it was the age of wisdom, it was the age of foolishness.';
+
+  @override
+  String get sectionText => 'Text';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeSepia => 'Sepia';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get fontDescSerif =>
+      'Literata: a serif designed for reading on screens.';
+
+  @override
+  String get fontDescGaramond =>
+      'EB Garamond: a classic book face, based on 16th-century type.';
+
+  @override
+  String get fontDescSans =>
+      'Atkinson Hyperlegible: a sans-serif designed by the Braille Institute so that similar letters are easy to tell apart.';
+
+  @override
+  String get fontDescDyslexic =>
+      'OpenDyslexic has weighted letter bottoms to help keep letters from flipping or swapping. Many readers also find extra letter spacing and unjustified text easier.';
+
+  @override
+  String get textSize => 'Text size';
+
+  @override
+  String get lineSpacing => 'Line spacing';
+
+  @override
+  String get letterSpacing => 'Letter spacing';
+
+  @override
+  String get normal => 'Normal';
+
+  @override
+  String get justifyText => 'Justify text';
+
+  @override
+  String get justifySubtitle =>
+      'Even right edge. Turn off for even spacing between words.';
+
+  @override
+  String get sectionPage => 'Page';
+
+  @override
+  String get margins => 'Margins';
+
+  @override
+  String get lineWidth => 'Line width';
+
+  @override
+  String get lineWidthHint =>
+      'Shorter lines are easier to follow; the text column is never wider than the screen minus the margins.';
+
+  @override
+  String get sectionScreen => 'Screen';
+
+  @override
+  String get brightness => 'Brightness';
+
+  @override
+  String get warmth => 'Warmth';
+
+  @override
+  String get off => 'Off';
+
+  @override
+  String get screenHint =>
+      'Brightness and warmth apply to the whole app, on top of your device’s own settings. Warmth reduces blue light, like a night light.';
+
+  @override
+  String readingSpeed(int wpm) {
+    return 'Reading speed: about $wpm words per minute (learned as you read).';
+  }
+
+  @override
+  String get resetDefaults => 'Reset to defaults';
+
+  @override
+  String errCatalogHttp(int status) {
+    return 'The catalog returned an error ($status).';
+  }
+
+  @override
+  String get errSearchFailed => 'Search failed.';
+
+  @override
+  String get errNoOtherEdition => 'There is no other edition of this book.';
+
+  @override
+  String get errNoEpub =>
+      'This title has no e-book edition (it may be an audio book).';
+
+  @override
+  String get errDownloadTimeout =>
+      'The download took too long. Check your connection and try again.';
+
+  @override
+  String errDownloadHttp(int status) {
+    return 'Download failed ($status).';
+  }
+
+  @override
+  String get errInvalidEpub => 'The downloaded file is not a valid EPUB.';
+
+  @override
+  String get errWikisourceTooLong =>
+      'Wikisource could not prepare this book: it is too long for their EPUB service. Try one of its volumes, or look for it in another catalog.';
+
+  @override
+  String errDictionary(int status) {
+    return 'The dictionary is unavailable ($status).';
+  }
+
+  @override
+  String errTranslationUnavailable(int status) {
+    return 'Translation is unavailable ($status).';
+  }
+
+  @override
+  String get errTranslationQuota =>
+      'The free daily translation limit has been reached.';
+
+  @override
+  String errTranslationFailed(int status) {
+    return 'Translation failed ($status).';
+  }
+
+  @override
+  String errSourceBusy(String host) {
+    return '$host is busy; try again in a minute.';
+  }
+
+  @override
+  String errSourceHttp(String host, int status) {
+    return '$host returned an error ($status).';
+  }
+
+  @override
+  String get errTimeout =>
+      'The connection took too long. Check your internet connection and try again.';
+
+  @override
+  String get errGeneric => 'Something went wrong. Please try again.';
+}

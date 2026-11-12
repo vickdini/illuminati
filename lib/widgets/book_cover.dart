@@ -12,16 +12,23 @@ class BookCover extends StatelessWidget {
   final double? width;
   final double? height;
 
-  const BookCover(
-      {super.key, required this.book, this.localPath, this.width, this.height});
+  const BookCover({
+    super.key,
+    required this.book,
+    this.localPath,
+    this.width,
+    this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
     Widget image;
     if (localPath != null && File(localPath!).existsSync()) {
-      image = Image.file(File(localPath!),
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _Placeholder(book: book));
+      image = Image.file(
+        File(localPath!),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _Placeholder(book: book),
+      );
     } else if (book.coverUrl != null) {
       image = Image.network(
         book.coverUrl!,
@@ -29,7 +36,9 @@ class BookCover extends StatelessWidget {
         errorBuilder: (_, __, ___) => _Placeholder(book: book),
         loadingBuilder: (context, child, progress) => progress == null
             ? child
-            : Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+            : Container(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
       );
     } else {
       image = _Placeholder(book: book);
@@ -42,13 +51,14 @@ class BookCover extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(6),
           boxShadow: const [
-            BoxShadow(color: Color(0x33000000), blurRadius: 6, offset: Offset(0, 2)),
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: image,
-        ),
+        child: ClipRRect(borderRadius: BorderRadius.circular(6), child: image),
       ),
     );
   }
@@ -88,10 +98,11 @@ class _Placeholder extends StatelessWidget {
               maxLines: 5,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  fontFamily: 'serif'),
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontFamily: 'serif',
+              ),
             ),
           ),
           const SizedBox(height: 8),

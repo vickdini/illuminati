@@ -56,21 +56,20 @@ class Book {
     List<String>? languages,
     int? downloadCount,
     String? summary,
-  }) =>
-      Book(
-        id: id,
-        title: title ?? this.title,
-        authors: authors ?? this.authors,
-        coverUrl: coverUrl ?? this.coverUrl,
-        epubUrl: epubUrl ?? this.epubUrl,
-        subjects: subjects ?? this.subjects,
-        languages: languages ?? this.languages,
-        downloadCount: downloadCount ?? this.downloadCount,
-        summary: summary ?? this.summary,
-        source: source,
-        sourceId: sourceId,
-        webUrl: webUrl,
-      );
+  }) => Book(
+    id: id,
+    title: title ?? this.title,
+    authors: authors ?? this.authors,
+    coverUrl: coverUrl ?? this.coverUrl,
+    epubUrl: epubUrl ?? this.epubUrl,
+    subjects: subjects ?? this.subjects,
+    languages: languages ?? this.languages,
+    downloadCount: downloadCount ?? this.downloadCount,
+    summary: summary ?? this.summary,
+    source: source,
+    sourceId: sourceId,
+    webUrl: webUrl,
+  );
 
   String get authorLine =>
       authors.isEmpty ? 'Unknown author' : authors.join(', ');
@@ -79,7 +78,10 @@ class Book {
   static String prettyName(String raw) {
     // Drop lifespans such as ", 1694-1778", ", ca. 1571-1631" or
     // ", 1812-1870 [Contributor]".
-    raw = raw.replaceFirst(RegExp(r',\s*(ca\.?\s*|fl\.?\s*|b\.\s*|d\.\s*|BCE?\s*)?\d.*$'), '');
+    raw = raw.replaceFirst(
+      RegExp(r',\s*(ca\.?\s*|fl\.?\s*|b\.\s*|d\.\s*|BCE?\s*)?\d.*$'),
+      '',
+    );
     final parts = raw.split(', ');
     if (parts.length == 2 && !parts[1].contains(RegExp(r'\d'))) {
       return '${parts[1]} ${parts[0]}'.trim();
@@ -88,34 +90,34 @@ class Book {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'authors': authors,
-        'coverUrl': coverUrl,
-        'epubUrl': epubUrl,
-        'subjects': subjects,
-        'languages': languages,
-        'downloadCount': downloadCount,
-        'summary': summary,
-        'source': source,
-        'sourceId': sourceId,
-        'webUrl': webUrl,
-      };
+    'id': id,
+    'title': title,
+    'authors': authors,
+    'coverUrl': coverUrl,
+    'epubUrl': epubUrl,
+    'subjects': subjects,
+    'languages': languages,
+    'downloadCount': downloadCount,
+    'summary': summary,
+    'source': source,
+    'sourceId': sourceId,
+    'webUrl': webUrl,
+  };
 
   factory Book.fromJson(Map<String, dynamic> j) => Book(
-        source: j['source'] as String? ?? 'gutenberg',
-        sourceId: j['sourceId'] as String?,
-        webUrl: j['webUrl'] as String?,
-        id: j['id'] as int,
-        title: j['title'] as String,
-        authors: (j['authors'] as List).cast<String>(),
-        coverUrl: j['coverUrl'] as String?,
-        epubUrl: j['epubUrl'] as String?,
-        subjects: ((j['subjects'] as List?) ?? []).cast<String>(),
-        languages: ((j['languages'] as List?) ?? []).cast<String>(),
-        downloadCount: j['downloadCount'] as int? ?? 0,
-        summary: j['summary'] as String?,
-      );
+    source: j['source'] as String? ?? 'gutenberg',
+    sourceId: j['sourceId'] as String?,
+    webUrl: j['webUrl'] as String?,
+    id: j['id'] as int,
+    title: j['title'] as String,
+    authors: (j['authors'] as List).cast<String>(),
+    coverUrl: j['coverUrl'] as String?,
+    epubUrl: j['epubUrl'] as String?,
+    subjects: ((j['subjects'] as List?) ?? []).cast<String>(),
+    languages: ((j['languages'] as List?) ?? []).cast<String>(),
+    downloadCount: j['downloadCount'] as int? ?? 0,
+    summary: j['summary'] as String?,
+  );
 }
 
 /// Reading state the user sets (or the reader sets on finishing a book).
@@ -136,7 +138,8 @@ class LibraryEntry {
   bool get isDownloaded => epubPath != null;
 
   /// Opened and partly read, but not finished.
-  bool get isReading => isDownloaded && progress > 0 && status != ReadingStatus.finished;
+  bool get isReading =>
+      isDownloaded && progress > 0 && status != ReadingStatus.finished;
 
   /// Index of the chapter the reader was on.
   int chapter;
@@ -165,31 +168,33 @@ class LibraryEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'book': book.toJson(),
-        'epubPath': epubPath,
-        'coverPath': coverPath,
-        'addedAt': addedAt.toIso8601String(),
-        'lastOpened': lastOpened?.toIso8601String(),
-        'chapter': chapter,
-        'block': block,
-        'progress': progress,
-        'anchor': anchor,
-        'status': status.name,
-      };
+    'book': book.toJson(),
+    'epubPath': epubPath,
+    'coverPath': coverPath,
+    'addedAt': addedAt.toIso8601String(),
+    'lastOpened': lastOpened?.toIso8601String(),
+    'chapter': chapter,
+    'block': block,
+    'progress': progress,
+    'anchor': anchor,
+    'status': status.name,
+  };
 
   factory LibraryEntry.fromJson(Map<String, dynamic> j) => LibraryEntry(
-        book: Book.fromJson((j['book'] as Map).cast<String, dynamic>()),
-        epubPath: j['epubPath'] as String?,
-        status: ReadingStatus.values.firstWhere((s) => s.name == j['status'],
-            orElse: () => ReadingStatus.none),
-        coverPath: j['coverPath'] as String?,
-        addedAt: DateTime.parse(j['addedAt'] as String),
-        lastOpened: j['lastOpened'] == null
-            ? null
-            : DateTime.parse(j['lastOpened'] as String),
-        chapter: j['chapter'] as int? ?? 0,
-        block: j['block'] as int? ?? 0,
-        progress: (j['progress'] as num?)?.toDouble() ?? 0,
-        anchor: j['anchor'] as String? ?? '',
-      );
+    book: Book.fromJson((j['book'] as Map).cast<String, dynamic>()),
+    epubPath: j['epubPath'] as String?,
+    status: ReadingStatus.values.firstWhere(
+      (s) => s.name == j['status'],
+      orElse: () => ReadingStatus.none,
+    ),
+    coverPath: j['coverPath'] as String?,
+    addedAt: DateTime.parse(j['addedAt'] as String),
+    lastOpened: j['lastOpened'] == null
+        ? null
+        : DateTime.parse(j['lastOpened'] as String),
+    chapter: j['chapter'] as int? ?? 0,
+    block: j['block'] as int? ?? 0,
+    progress: (j['progress'] as num?)?.toDouble() ?? 0,
+    anchor: j['anchor'] as String? ?? '',
+  );
 }

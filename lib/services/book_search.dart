@@ -13,7 +13,8 @@ class SearchHit {
 class BookSearch {
   final ParsedBook book;
   late final List<List<String>> _folded = [
-    for (final c in book.chapters) [for (final b in c.blocks) foldSameLength(b.text)]
+    for (final c in book.chapters)
+      [for (final b in c.blocks) foldSameLength(b.text)],
   ];
 
   BookSearch(this.book);

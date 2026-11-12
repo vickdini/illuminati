@@ -9,11 +9,11 @@ enum HighlightColor { yellow, green, blue, pink }
 
 extension HighlightColors on HighlightColor {
   Color get swatch => switch (this) {
-        HighlightColor.yellow => const Color(0xFFF5D547),
-        HighlightColor.green => const Color(0xFF8FD47E),
-        HighlightColor.blue => const Color(0xFF7DB8F5),
-        HighlightColor.pink => const Color(0xFFF590BC),
-      };
+    HighlightColor.yellow => const Color(0xFFF5D547),
+    HighlightColor.green => const Color(0xFF8FD47E),
+    HighlightColor.blue => const Color(0xFF7DB8F5),
+    HighlightColor.pink => const Color(0xFFF590BC),
+  };
 
   /// Background behind highlighted text; softer on dark pages.
   Color background(bool dark) => swatch.withValues(alpha: dark ? 0.38 : 0.55);
@@ -48,29 +48,31 @@ class Highlight {
   bool get hasNote => note.trim().isNotEmpty;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'chapter': chapter,
-        'block': block,
-        'start': start,
-        'end': end,
-        'text': text,
-        'color': color.name,
-        'note': note,
-        'created': created.toIso8601String(),
-      };
+    'id': id,
+    'chapter': chapter,
+    'block': block,
+    'start': start,
+    'end': end,
+    'text': text,
+    'color': color.name,
+    'note': note,
+    'created': created.toIso8601String(),
+  };
 
   factory Highlight.fromJson(Map<String, dynamic> j) => Highlight(
-        id: j['id'] as String,
-        chapter: j['chapter'] as int,
-        block: j['block'] as int,
-        start: j['start'] as int,
-        end: j['end'] as int,
-        text: j['text'] as String,
-        color: HighlightColor.values.firstWhere((c) => c.name == j['color'],
-            orElse: () => HighlightColor.yellow),
-        note: j['note'] as String? ?? '',
-        created: DateTime.parse(j['created'] as String),
-      );
+    id: j['id'] as String,
+    chapter: j['chapter'] as int,
+    block: j['block'] as int,
+    start: j['start'] as int,
+    end: j['end'] as int,
+    text: j['text'] as String,
+    color: HighlightColor.values.firstWhere(
+      (c) => c.name == j['color'],
+      orElse: () => HighlightColor.yellow,
+    ),
+    note: j['note'] as String? ?? '',
+    created: DateTime.parse(j['created'] as String),
+  );
 }
 
 class Bookmark {
@@ -89,18 +91,18 @@ class Bookmark {
   });
 
   Map<String, dynamic> toJson() => {
-        'chapter': chapter,
-        'block': block,
-        'snippet': snippet,
-        'created': created.toIso8601String(),
-      };
+    'chapter': chapter,
+    'block': block,
+    'snippet': snippet,
+    'created': created.toIso8601String(),
+  };
 
   factory Bookmark.fromJson(Map<String, dynamic> j) => Bookmark(
-        chapter: j['chapter'] as int,
-        block: j['block'] as int,
-        snippet: j['snippet'] as String? ?? '',
-        created: DateTime.parse(j['created'] as String),
-      );
+    chapter: j['chapter'] as int,
+    block: j['block'] as int,
+    snippet: j['snippet'] as String? ?? '',
+    created: DateTime.parse(j['created'] as String),
+  );
 }
 
 /// Highlights, notes and bookmarks for one book, saved as JSON next to it.
@@ -116,10 +118,16 @@ class BookAnnotations extends ChangeNotifier {
     if (await file.exists()) {
       try {
         final j = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-        a.highlights.addAll(((j['highlights'] as List?) ?? [])
-            .map((e) => Highlight.fromJson((e as Map).cast<String, dynamic>())));
-        a.bookmarks.addAll(((j['bookmarks'] as List?) ?? [])
-            .map((e) => Bookmark.fromJson((e as Map).cast<String, dynamic>())));
+        a.highlights.addAll(
+          ((j['highlights'] as List?) ?? []).map(
+            (e) => Highlight.fromJson((e as Map).cast<String, dynamic>()),
+          ),
+        );
+        a.bookmarks.addAll(
+          ((j['bookmarks'] as List?) ?? []).map(
+            (e) => Bookmark.fromJson((e as Map).cast<String, dynamic>()),
+          ),
+        );
       } catch (e) {
         debugPrint('Could not read annotations: $e');
       }
@@ -130,10 +138,12 @@ class BookAnnotations extends ChangeNotifier {
   Future<void> _save() async {
     await file.parent.create(recursive: true);
     final tmp = File('${file.path}.tmp');
-    await tmp.writeAsString(jsonEncode({
-      'highlights': highlights.map((h) => h.toJson()).toList(),
-      'bookmarks': bookmarks.map((b) => b.toJson()).toList(),
-    }));
+    await tmp.writeAsString(
+      jsonEncode({
+        'highlights': highlights.map((h) => h.toJson()).toList(),
+        'bookmarks': bookmarks.map((b) => b.toJson()).toList(),
+      }),
+    );
     await tmp.rename(file.path);
   }
 
@@ -154,14 +164,23 @@ class BookAnnotations extends ChangeNotifier {
   void _sort() {
     int byPos(int c1, int b1, int s1, int c2, int b2, int s2) =>
         c1 != c2 ? c1 - c2 : (b1 != b2 ? b1 - b2 : s1 - s2);
-    highlights.sort((a, b) => byPos(a.chapter, a.block, a.start, b.chapter, b.block, b.start));
-    bookmarks.sort((a, b) => byPos(a.chapter, a.block, 0, b.chapter, b.block, 0));
+    highlights.sort(
+      (a, b) => byPos(a.chapter, a.block, a.start, b.chapter, b.block, b.start),
+    );
+    bookmarks.sort(
+      (a, b) => byPos(a.chapter, a.block, 0, b.chapter, b.block, 0),
+    );
   }
 
   void addHighlight(Highlight h) {
     // Merge with highlights it overlaps in the same paragraph.
-    highlights.removeWhere((o) =>
-        o.chapter == h.chapter && o.block == h.block && o.start < h.end && h.start < o.end);
+    highlights.removeWhere(
+      (o) =>
+          o.chapter == h.chapter &&
+          o.block == h.block &&
+          o.start < h.end &&
+          h.start < o.end,
+    );
     highlights.add(h);
     changed();
   }
@@ -172,13 +191,17 @@ class BookAnnotations extends ChangeNotifier {
   }
 
   List<Highlight> inBlock(int chapter, int block) => [
-        for (final h in highlights)
-          if (h.chapter == chapter && h.block == block) h
-      ];
+    for (final h in highlights)
+      if (h.chapter == chapter && h.block == block) h,
+  ];
 
   Bookmark? bookmarkIn(int chapter, int firstBlock, int lastBlock) {
     for (final b in bookmarks) {
-      if (b.chapter == chapter && b.block >= firstBlock && b.block <= lastBlock) return b;
+      if (b.chapter == chapter &&
+          b.block >= firstBlock &&
+          b.block <= lastBlock) {
+        return b;
+      }
     }
     return null;
   }
@@ -217,7 +240,10 @@ class BookAnnotations extends ChangeNotifier {
       }
     }
     for (final b in bookmarks) {
-      if (b.snippet.isEmpty || _matches(book, b.chapter, b.block, 0, b.snippet)) continue;
+      if (b.snippet.isEmpty ||
+          _matches(book, b.chapter, b.block, 0, b.snippet)) {
+        continue;
+      }
       final found = locate(book, b.chapter, b.block, b.snippet);
       if (found != null) {
         b
@@ -234,12 +260,18 @@ class BookAnnotations extends ChangeNotifier {
     final blocks = book.chapters[c].blocks;
     if (b >= blocks.length) return false;
     final t = blocks[b].text;
-    return start + text.length <= t.length && t.substring(start, start + text.length) == text;
+    return start + text.length <= t.length &&
+        t.substring(start, start + text.length) == text;
   }
 
   /// Finds [text] in the book: in [chapter] outward from [block] first, then
   /// in the other chapters. Returns (chapter, block, offset).
-  static (int, int, int)? locate(ParsedBook book, int chapter, int block, String text) {
+  static (int, int, int)? locate(
+    ParsedBook book,
+    int chapter,
+    int block,
+    String text,
+  ) {
     final order = [
       if (chapter < book.chapters.length) chapter,
       for (var c = 0; c < book.chapters.length; c++)

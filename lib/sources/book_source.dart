@@ -12,46 +12,51 @@ abstract class BookSource {
   String get id;
   String get name;
 
-  /// One line shown under the row title.
-  String get tagline;
-
   /// Whether this source has anything for the catalog language ('' = all)
   /// and category subject ('' = none). Rows are hidden otherwise.
   bool supports({required String language, required String subject});
 
   /// The row's default contents (popular or recommended books).
-  Future<List<Book>> featured({required String language, required String subject});
+  Future<List<Book>> featured({
+    required String language,
+    required String subject,
+  });
 
-  Future<List<Book>> search(String query, {required String language, required String subject});
+  Future<List<Book>> search(
+    String query, {
+    required String language,
+    required String subject,
+  });
 
   /// Fills in summary, subjects and the exact EPUB link.
   Future<Book> details(Book book);
-
-  /// Copyright note shown on the book page.
-  String rightsNote(Book book);
 }
 
-class SourceException implements Exception {
-  final String message;
+class SourceException extends AppException {
+  const SourceException(super.code, {super.status, super.host, super.detail});
 
   /// True when the service asked us to slow down (HTTP 429).
-  final bool busy;
-  SourceException(this.message, {this.busy = false});
-  @override
-  String toString() => message;
+  bool get busy => code == ErrorCode.sourceBusy;
 }
 
 /// Shared HTTP GET with the app's User-Agent and a timeout.
-Future<http.Response> sourceGet(http.Client client, Uri uri,
-    {Duration timeout = const Duration(seconds: 30)}) async {
+Future<http.Response> sourceGet(
+  http.Client client,
+  Uri uri, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
   final res = await client
       .get(uri, headers: {'User-Agent': CatalogService.userAgent})
       .timeout(timeout);
   if (res.statusCode == 429) {
-    throw SourceException('${uri.host} is busy; try again in a minute.', busy: true);
+    throw SourceException(ErrorCode.sourceBusy, host: uri.host);
   }
   if (res.statusCode != 200) {
-    throw SourceException('${uri.host} returned an error (${res.statusCode}).');
+    throw SourceException(
+      ErrorCode.sourceHttp,
+      host: uri.host,
+      status: res.statusCode,
+    );
   }
   return res;
 }
@@ -64,23 +69,15 @@ class SourceRegistry {
 
   BookSource? byId(String id) => extra.where((s) => s.id == id).firstOrNull;
 
-  String nameOf(Book book) =>
-      book.source == 'gutenberg' ? 'Project Gutenberg' : (byId(book.source)?.name ?? book.source);
+  String nameOf(Book book) => book.source == 'gutenberg'
+      ? 'Project Gutenberg'
+      : (byId(book.source)?.name ?? book.source);
 
   Future<Book> details(Book book) {
     if (book.source == 'gutenberg') return gutenberg.details(book);
     final source = byId(book.source);
     if (source == null) return Future.value(book);
     return source.details(book);
-  }
-
-  String rightsNote(Book book) {
-    if (book.source == 'gutenberg') {
-      return 'From Project Gutenberg (ebook #${book.id}). This book is in the public '
-          'domain in the United States. Copyright terms differ between countries, '
-          'so check your local laws before downloading.';
-    }
-    return byId(book.source)?.rightsNote(book) ?? '';
   }
 }
 
@@ -103,5 +100,7 @@ class FeaturedCache {
 }
 
 /// Removes characters with special meaning in search query syntaxes.
-String plainQuery(String q) =>
-    q.replaceAll(RegExp(r'[+\-&|!(){}\[\]^"~*?:\\/]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+String plainQuery(String q) => q
+    .replaceAll(RegExp(r'[+\-&|!(){}\[\]^"~*?:\\/]'), ' ')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();

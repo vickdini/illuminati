@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/l10n_helpers.dart';
 
 import '../models/annotation.dart';
 import '../services/epub_parser.dart';
@@ -68,9 +69,13 @@ class BlockView extends StatelessWidget {
       height: settings.lineHeight,
       fontFamily: fonts.first,
       fontFamilyFallback: fonts.skip(1).toList(),
-      letterSpacing: settings.letterSpacing == 0 ? null : size * settings.letterSpacing,
+      letterSpacing: settings.letterSpacing == 0
+          ? null
+          : size * settings.letterSpacing,
       // Wider word gaps go with wider letter spacing, so words stay distinct.
-      wordSpacing: settings.letterSpacing > 0 ? size * settings.letterSpacing * 1.5 : null,
+      wordSpacing: settings.letterSpacing > 0
+          ? size * settings.letterSpacing * 1.5
+          : null,
     );
 
     if (block.type == BlockType.image) return _image(context, base);
@@ -79,60 +84,78 @@ class BlockView extends StatelessWidget {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: size),
         child: Center(
-          child: Text('*   *   *',
-              style: base.copyWith(color: rt.foreground.withValues(alpha: 0.6))),
+          child: Text(
+            '*   *   *',
+            style: base.copyWith(color: rt.foreground.withValues(alpha: 0.6)),
+          ),
         ),
       );
     }
 
     final (style, align, padding) = switch (block.type) {
       BlockType.h1 => (
-          base.copyWith(fontSize: size * 1.6, fontWeight: FontWeight.w700, height: 1.3),
-          TextAlign.center,
-          EdgeInsets.only(top: size * 1.5, bottom: size),
+        base.copyWith(
+          fontSize: size * 1.6,
+          fontWeight: FontWeight.w700,
+          height: 1.3,
         ),
+        TextAlign.center,
+        EdgeInsets.only(top: size * 1.5, bottom: size),
+      ),
       BlockType.h2 => (
-          base.copyWith(fontSize: size * 1.35, fontWeight: FontWeight.w700, height: 1.3),
-          TextAlign.center,
-          EdgeInsets.only(top: size * 1.2, bottom: size * 0.8),
+        base.copyWith(
+          fontSize: size * 1.35,
+          fontWeight: FontWeight.w700,
+          height: 1.3,
         ),
+        TextAlign.center,
+        EdgeInsets.only(top: size * 1.2, bottom: size * 0.8),
+      ),
       BlockType.h3 => (
-          base.copyWith(fontSize: size * 1.15, fontWeight: FontWeight.w600, height: 1.3),
-          TextAlign.center,
-          EdgeInsets.only(top: size, bottom: size * 0.6),
+        base.copyWith(
+          fontSize: size * 1.15,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
         ),
+        TextAlign.center,
+        EdgeInsets.only(top: size, bottom: size * 0.6),
+      ),
       BlockType.quote => (
-          base,
-          TextAlign.start,
-          EdgeInsets.only(left: size * 1.5, right: size, bottom: size * 0.6),
-        ),
+        base,
+        TextAlign.start,
+        EdgeInsets.only(left: size * 1.5, right: size, bottom: size * 0.6),
+      ),
       BlockType.pre => (
-          base.copyWith(
-              fontFamily: 'Consolas',
-              fontFamilyFallback: const ['Menlo', 'DejaVu Sans Mono', 'monospace'],
-              fontSize: size * 0.85),
-          TextAlign.start,
-          EdgeInsets.only(bottom: size * 0.6),
+        base.copyWith(
+          fontFamily: 'Consolas',
+          fontFamilyFallback: const ['Menlo', 'DejaVu Sans Mono', 'monospace'],
+          fontSize: size * 0.85,
         ),
+        TextAlign.start,
+        EdgeInsets.only(bottom: size * 0.6),
+      ),
       _ => (
-          base,
-          settings.justify ? TextAlign.justify : TextAlign.start,
-          EdgeInsets.only(bottom: size * 0.35),
-        ),
+        base,
+        settings.justify ? TextAlign.justify : TextAlign.start,
+        EdgeInsets.only(bottom: size * 0.35),
+      ),
     };
 
     final indent = block.type == BlockType.paragraph;
     return Padding(
       padding: padding,
       child: _ReaderSelectableText(
-        TextSpan(children: [
-          // First-line indent, as in printed books.
-          if (indent) WidgetSpan(child: SizedBox(width: size * 1.5)),
-          ..._spans(rt == ReaderTheme.dark),
-        ]),
+        TextSpan(
+          children: [
+            // First-line indent, as in printed books.
+            if (indent) WidgetSpan(child: SizedBox(width: size * 1.5)),
+            ..._spans(rt == ReaderTheme.dark),
+          ],
+        ),
         style: style,
         textAlign: align,
-        onSelectionChanged: (sel, cause) => actions.selectionChanged(!sel.isCollapsed),
+        onSelectionChanged: (sel, cause) =>
+            actions.selectionChanged(!sel.isCollapsed),
         contextMenuBuilder: _menu,
       ),
     );
@@ -150,10 +173,14 @@ class BlockView extends StatelessWidget {
     }
     final cuts = <int>{0, text.length, ...runStarts};
     for (final h in highlights) {
-      cuts..add(h.start.clamp(0, text.length))..add(h.end.clamp(0, text.length));
+      cuts
+        ..add(h.start.clamp(0, text.length))
+        ..add(h.end.clamp(0, text.length));
     }
     for (final (s, e) in searchMarks) {
-      cuts..add(s)..add(e);
+      cuts
+        ..add(s)
+        ..add(e);
     }
     final sorted = cuts.toList()..sort();
 
@@ -177,19 +204,23 @@ class BlockView extends StatelessWidget {
       } else if (h != null) {
         bg = h.color.background(dark);
       }
-      spans.add(TextSpan(
-        text: text.substring(a, b),
-        style: TextStyle(
-          fontStyle: r.italic ? FontStyle.italic : null,
-          fontWeight: r.bold ? FontWeight.w700 : null,
-          backgroundColor: bg,
-          // Highlights with a note get a dotted underline.
-          decoration: h != null && h.hasNote ? TextDecoration.underline : null,
-          decorationStyle: TextDecorationStyle.dotted,
-          decorationColor: h?.color.swatch,
-          decorationThickness: 2,
+      spans.add(
+        TextSpan(
+          text: text.substring(a, b),
+          style: TextStyle(
+            fontStyle: r.italic ? FontStyle.italic : null,
+            fontWeight: r.bold ? FontWeight.w700 : null,
+            backgroundColor: bg,
+            // Highlights with a note get a dotted underline.
+            decoration: h != null && h.hasNote
+                ? TextDecoration.underline
+                : null,
+            decorationStyle: TextDecorationStyle.dotted,
+            decorationColor: h?.color.swatch,
+            decorationThickness: 2,
+          ),
         ),
-      ));
+      );
     }
     return spans;
   }
@@ -208,7 +239,8 @@ class BlockView extends StatelessWidget {
       end--;
     }
     // Snap to whole words, like Kindle: "si|ngle" becomes "single".
-    bool letter(int i) => RegExp(r"[\p{L}\p{N}'’-]", unicode: true).hasMatch(text[i]);
+    bool letter(int i) =>
+        RegExp(r"[\p{L}\p{N}'’-]", unicode: true).hasMatch(text[i]);
     if (start < end) {
       while (start > 0 && letter(start - 1) && letter(start)) {
         start--;
@@ -222,9 +254,11 @@ class BlockView extends StatelessWidget {
     final words = selected.trim().split(RegExp(r'\s+')).length;
 
     final touching = highlights
-        .where((h) => start == end
-            ? h.start <= start && start <= h.end
-            : h.start < end && start < h.end)
+        .where(
+          (h) => start == end
+              ? h.start <= start && start <= h.end
+              : h.start < end && start < h.end,
+        )
         .firstOrNull;
 
     void run(VoidCallback f) {
@@ -238,25 +272,40 @@ class BlockView extends StatelessWidget {
     final items = <ContextMenuButtonItem>[
       if (hasText) ...[
         ContextMenuButtonItem(
-            label: 'Highlight', onPressed: () => run(() => actions.highlight(start, end, selected))),
+          label: L10n.of(context).highlight,
+          onPressed: () => run(() => actions.highlight(start, end, selected)),
+        ),
         ContextMenuButtonItem(
-            label: 'Note', onPressed: () => run(() => actions.addNote(start, end, selected))),
+          label: L10n.of(context).note,
+          onPressed: () => run(() => actions.addNote(start, end, selected)),
+        ),
         if (words <= 3)
           ContextMenuButtonItem(
-              label: 'Define', onPressed: () => run(() => actions.define(selected))),
+            label: L10n.of(context).define,
+            onPressed: () => run(() => actions.define(selected)),
+          ),
         ContextMenuButtonItem(
-            label: 'Translate', onPressed: () => run(() => actions.translate(selected))),
+          label: L10n.of(context).translate,
+          onPressed: () => run(() => actions.translate(selected)),
+        ),
       ],
       if (touching != null) ...[
         ContextMenuButtonItem(
-            label: touching.hasNote ? 'Edit note' : 'Edit highlight',
-            onPressed: () => run(() => actions.editHighlight(touching))),
+          label: touching.hasNote
+              ? L10n.of(context).editNote
+              : L10n.of(context).editHighlight,
+          onPressed: () => run(() => actions.editHighlight(touching)),
+        ),
         ContextMenuButtonItem(
-            label: 'Remove highlight',
-            onPressed: () => run(() => actions.removeHighlight(touching))),
+          label: L10n.of(context).removeHighlight,
+          onPressed: () => run(() => actions.removeHighlight(touching)),
+        ),
       ],
-      ...state.contextMenuButtonItems.where((i) =>
-          i.type == ContextMenuButtonType.copy || i.type == ContextMenuButtonType.selectAll),
+      ...state.contextMenuButtonItems.where(
+        (i) =>
+            i.type == ContextMenuButtonType.copy ||
+            i.type == ContextMenuButtonType.selectAll,
+      ),
     ];
     return AdaptiveTextSelectionToolbar.buttonItems(
       anchors: state.contextMenuAnchors,
@@ -269,34 +318,41 @@ class BlockView extends StatelessWidget {
     if (bytes == null) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.symmetric(vertical: settings.fontSize * 0.8),
-      child: Column(children: [
-        Center(
-          child: MouseRegion(
-            cursor: SystemMouseCursors.zoomIn,
-            child: GestureDetector(
-              onTap: onImageTap,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxImageHeight),
-                child: Image.memory(bytes,
+      child: Column(
+        children: [
+          Center(
+            child: MouseRegion(
+              cursor: SystemMouseCursors.zoomIn,
+              child: GestureDetector(
+                onTap: onImageTap,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxImageHeight),
+                  child: Image.memory(
+                    bytes,
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.medium,
                     gaplessPlayback: true,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        if (block.alt != null && block.alt!.length > 3)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(block.alt!,
+          if (block.alt != null && block.alt!.length > 3)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                block.alt!,
                 textAlign: TextAlign.center,
                 style: base.copyWith(
-                    fontSize: settings.fontSize * 0.8,
-                    fontStyle: FontStyle.italic,
-                    color: base.color?.withValues(alpha: 0.7))),
-          ),
-      ]),
+                  fontSize: settings.fontSize * 0.8,
+                  fontStyle: FontStyle.italic,
+                  color: base.color?.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -340,7 +396,9 @@ class _ReaderSelectableTextState extends State<_ReaderSelectableText> {
     debugLabel: 'paragraph',
     onKeyEvent: (node, event) {
       // Shift+arrows still extend the selection.
-      if (HardwareKeyboard.instance.isShiftPressed) return KeyEventResult.ignored;
+      if (HardwareKeyboard.instance.isShiftPressed) {
+        return KeyEventResult.ignored;
+      }
       return _readerKeys.contains(event.logicalKey)
           ? KeyEventResult.skipRemainingHandlers
           : KeyEventResult.ignored;
@@ -355,13 +413,13 @@ class _ReaderSelectableTextState extends State<_ReaderSelectableText> {
 
   @override
   Widget build(BuildContext context) => SelectableText.rich(
-        widget.span,
-        focusNode: _focus,
-        style: widget.style,
-        textAlign: widget.textAlign,
-        onSelectionChanged: widget.onSelectionChanged,
-        contextMenuBuilder: widget.contextMenuBuilder,
-      );
+    widget.span,
+    focusNode: _focus,
+    style: widget.style,
+    textAlign: widget.textAlign,
+    onSelectionChanged: widget.onSelectionChanged,
+    contextMenuBuilder: widget.contextMenuBuilder,
+  );
 }
 
 /// Full-screen, zoomable image.
@@ -369,35 +427,44 @@ void showImageViewer(BuildContext context, Uint8List bytes, String? caption) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Close image',
+    barrierLabel: L10n.of(context).closeImage,
     barrierColor: Colors.black.withValues(alpha: 0.92),
     pageBuilder: (ctx, _, __) => SafeArea(
-      child: Stack(children: [
-        Positioned.fill(
-          child: InteractiveViewer(
-            maxScale: 6,
-            child: Center(child: Image.memory(bytes, filterQuality: FilterQuality.high)),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: InteractiveViewer(
+              maxScale: 6,
+              child: Center(
+                child: Image.memory(bytes, filterQuality: FilterQuality.high),
+              ),
+            ),
           ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: IconButton(
-            tooltip: 'Close',
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.pop(ctx),
-          ),
-        ),
-        if (caption != null && caption.length > 3)
           Positioned(
-            left: 24,
-            right: 24,
-            bottom: 16,
-            child: Text(caption,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)),
+            top: 8,
+            right: 8,
+            child: IconButton(
+              tooltip: L10n.of(context).close,
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.pop(ctx),
+            ),
           ),
-      ]),
+          if (caption != null && caption.length > 3)
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 16,
+              child: Text(
+                caption,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+        ],
+      ),
     ),
   );
 }

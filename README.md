@@ -52,6 +52,19 @@ copyright has expired.
   Keyboard: ←/→ or PageUp/PageDown turn pages, ↑/↓ scroll, Ctrl+F search,
   Ctrl+B bookmark, Esc closes search/toolbar or goes back.
 
+## Languages
+
+The interface is available in English, Spanish, French, German, Italian and
+Portuguese. It follows the device's language, or pick one under
+Display & accessibility → App language.
+
+Texts live in `lib/l10n/app_<code>.arb` (English, `app_en.arb`, is the
+template). To add a language, copy `app_en.arb` to `app_<code>.arb`, translate
+the values (keep `{placeholders}` and plural forms), add the language to
+`appLanguages` in `lib/l10n/l10n_helpers.dart`, and run `flutter gen-l10n` (it
+also runs on every build). `flutter test` checks that every language has every
+string with the same placeholders.
+
 ## Run
 
 ```sh

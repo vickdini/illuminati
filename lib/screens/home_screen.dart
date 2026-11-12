@@ -12,30 +12,32 @@ import '../widgets/app_logo.dart';
 import '../widgets/book_cover.dart';
 import '../widgets/display_settings.dart';
 import '../widgets/library_tile.dart';
+import '../l10n/l10n_helpers.dart';
 import 'book_actions.dart';
 import 'library_screen.dart';
 
-/// Catalog categories, mapped to Gutenberg subject searches.
-const _categories = <(String, String)>[
-  ('Popular', ''),
-  ('Fiction', 'fiction'),
-  ('Mystery', 'detective'),
-  ('Adventure', 'adventure'),
-  ('Science Fiction', 'science fiction'),
-  ('Romance', 'love'),
-  ('Horror', 'horror'),
-  ('Fantasy', 'fantasy'),
-  ('Children', 'juvenile'),
-  ('Poetry', 'poetry'),
-  ('Drama', 'drama'),
-  ('Philosophy', 'philosophy'),
-  ('History', 'history'),
-  ('Science', 'science'),
-  ('Biography', 'biography'),
+/// Catalog categories (label, Gutenberg subject search).
+final _categories = <(String Function(L10n), String)>[
+  ((t) => t.catPopular, ''),
+  ((t) => t.catFiction, 'fiction'),
+  ((t) => t.catMystery, 'detective'),
+  ((t) => t.catAdventure, 'adventure'),
+  ((t) => t.catScienceFiction, 'science fiction'),
+  ((t) => t.catRomance, 'love'),
+  ((t) => t.catHorror, 'horror'),
+  ((t) => t.catFantasy, 'fantasy'),
+  ((t) => t.catChildren, 'juvenile'),
+  ((t) => t.catPoetry, 'poetry'),
+  ((t) => t.catDrama, 'drama'),
+  ((t) => t.catPhilosophy, 'philosophy'),
+  ((t) => t.catHistory, 'history'),
+  ((t) => t.catScience, 'science'),
+  ((t) => t.catBiography, 'biography'),
 ];
 
+/// Catalog languages, named in their own language ('' = all languages).
 const languages = <(String, String)>[
-  ('', 'All languages'),
+  ('', ''),
   ('en', 'English'),
   ('es', 'Español'),
   ('fr', 'Français'),
@@ -118,9 +120,11 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       if (!mounted || id != _requestId) return;
-      setState(() => _error = e is TimeoutException
-          ? 'The catalog is taking too long to respond.'
-          : 'Could not load the catalog. Check your internet connection.');
+      setState(
+        () => _error = e is TimeoutException
+            ? L10n.of(context).catalogTimeout
+            : L10n.of(context).catalogOffline,
+      );
     } finally {
       if (mounted && id == _requestId) setState(() => _loading = false);
     }
@@ -131,18 +135,26 @@ class _HomeScreenState extends State<HomeScreen> {
   /// ignored). Order: popular books whose title/author matches, then other
   /// title matches, then server hits that matched on other metadata.
   Future<CatalogPage> _search(
-      AppServices services, String query, String language, String subject) async {
+    AppServices services,
+    String query,
+    String language,
+    String subject,
+  ) async {
     final serverFuture = services.catalog
         .fetch(search: query, subject: subject, language: language)
         .then<CatalogPage?>((p) => p, onError: (_) => null);
-    await services.titleIndex
-        .load()
-        .timeout(const Duration(seconds: 20), onTimeout: () => null);
+    await services.titleIndex.load().timeout(
+      const Duration(seconds: 20),
+      onTimeout: () => null,
+    );
     final server = await serverFuture;
-    final local =
-        services.titleIndex.search(query, language: language, subject: subject);
+    final local = services.titleIndex.search(
+      query,
+      language: language,
+      subject: subject,
+    );
     if (server == null && local.isEmpty) {
-      throw CatalogException('Search failed.');
+      throw const CatalogException(ErrorCode.searchFailed);
     }
 
     final words = fold(query).split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
@@ -158,8 +170,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ...serverBooks.where((b) => !matches(b)),
     ];
     final seen = <int>{};
-    return CatalogPage(
-        [for (final b in merged) if (seen.add(b.id)) b], server?.nextUrl);
+    return CatalogPage([
+      for (final b in merged)
+        if (seen.add(b.id)) b,
+    ], server?.nextUrl);
   }
 
   void _onSearchChanged(String text) {
@@ -172,7 +186,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _onScroll(ScrollNotification n) {
-    if (n.metrics.extentAfter < 800 && _nextUrl != null && !_loading && _error == null) {
+    if (n.metrics.extentAfter < 800 &&
+        _nextUrl != null &&
+        !_loading &&
+        _error == null) {
       _load(more: true);
     }
     return false;
@@ -187,21 +204,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
-          const AppLogo(size: 32),
-          const SizedBox(width: 10),
-          Text('Illuminati',
+        title: Row(
+          children: [
+            const AppLogo(size: 32),
+            const SizedBox(width: 10),
+            Text(
+              'Illuminati',
               style: theme.textTheme.titleLarge?.copyWith(
-                  fontFamily: 'serif', fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-        ]),
+                fontFamily: 'serif',
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            tooltip: 'Display & accessibility',
+            tooltip: L10n.of(context).displayAccessibility,
             icon: const Icon(Icons.tune),
             onPressed: () => showDisplaySettings(context, services.settings),
           ),
           IconButton(
-            tooltip: 'About',
+            tooltip: L10n.of(context).about,
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showAbout(context),
           ),
@@ -235,21 +259,33 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(children: [
-                        Expanded(
-                          child: Text('Discover free books',
-                              style: theme.textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w600)),
-                        ),
-                        _LanguageMenu(onChanged: (code) {
-                          services.settings.update((s) => s.catalogLanguage = code);
-                          _reload();
-                        }),
-                      ]),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              L10n.of(context).discoverFreeBooks,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          _LanguageMenu(
+                            onChanged: (code) {
+                              services.settings.update(
+                                (s) => s.catalogLanguage = code,
+                              );
+                              _reload();
+                            },
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
-                      Text('Classics whose copyright has expired, free to download and keep.',
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        L10n.of(context).discoverSubtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: _searchCtrl,
@@ -260,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _reload();
                         },
                         decoration: InputDecoration(
-                          hintText: 'Search by title or author',
+                          hintText: L10n.of(context).searchHint,
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchCtrl.text.isEmpty
                               ? null
@@ -277,7 +313,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(28),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -286,13 +324,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: ScrollConfiguration(
                           // Let mouse users drag the chip row on desktop.
                           behavior: ScrollConfiguration.of(context).copyWith(
-                              dragDevices: PointerDeviceKind.values.toSet()),
+                            dragDevices: PointerDeviceKind.values.toSet(),
+                          ),
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _categories.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 8),
                             itemBuilder: (context, i) => ChoiceChip(
-                              label: Text(_categories[i].$1),
+                              label: Text(_categories[i].$1(L10n.of(context))),
                               selected: i == _category,
                               onSelected: (_) {
                                 if (i == _category) return;
@@ -309,27 +349,30 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               // ---------- Other free catalogs, one row each ----------
               SliverToBoxAdapter(
-                child: Column(children: [
-                  for (final source in services.sources.extra)
-                    if (source.supports(
-                        language: services.settings.catalogLanguage,
-                        subject: _categories[_category].$2))
-                      _SourceRow(
-                        key: ValueKey('${source.id}-$_rowsEpoch'),
-                        source: source,
-                        query: _query,
+                child: Column(
+                  children: [
+                    for (final source in services.sources.extra)
+                      if (source.supports(
                         language: services.settings.catalogLanguage,
                         subject: _categories[_category].$2,
-                        pad: pad,
-                      ),
-                ]),
+                      ))
+                        _SourceRow(
+                          key: ValueKey('${source.id}-$_rowsEpoch'),
+                          source: source,
+                          query: _query,
+                          language: services.settings.catalogLanguage,
+                          subject: _categories[_category].$2,
+                          pad: pad,
+                        ),
+                  ],
+                ),
               ),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(pad, 20, pad, 4),
                 sliver: SliverToBoxAdapter(
                   child: _RowHeader(
                     title: 'Project Gutenberg',
-                    subtitle: 'The largest free library: over 75,000 public-domain books',
+                    subtitle: L10n.of(context).gutenbergSubtitle,
                   ),
                 ),
               ),
@@ -360,17 +403,23 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_error != null) {
       return Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(children: [
-          Icon(Icons.cloud_off, size: 40, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(height: 8),
-          Text(_error!, textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try again'),
-            onPressed: () => _books.isEmpty ? _reload() : _load(more: true),
-          ),
-        ]),
+        child: Column(
+          children: [
+            Icon(
+              Icons.cloud_off,
+              size: 40,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 8),
+            Text(_error!, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: Text(L10n.of(context).tryAgain),
+              onPressed: () => _books.isEmpty ? _reload() : _load(more: true),
+            ),
+          ],
+        ),
       );
     }
     if (_loading) {
@@ -380,9 +429,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     if (_books.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
-        child: Center(child: Text('No books found. Try another search.')),
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(child: Text(L10n.of(context).noBooksFound)),
       );
     }
     return const SizedBox(height: 32);
@@ -394,18 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
       applicationName: 'Illuminati',
       applicationVersion: '1.0.0',
       applicationIcon: const AppLogo(size: 48),
-      children: const [
-        Text('Illuminati lets you find, download and read books that were never '
-            'under copyright or whose copyright has expired.\n\n'
-            'Books come from Project Gutenberg (gutenberg.org), Standard Ebooks '
-            '(standardebooks.org), Wikisource (wikisource.org, as EPUBs made by WS '
-            'Export) and the Internet Archive (archive.org). They are in the public '
-            'domain in the United States, except some Wikisource texts that are under '
-            'free licences. Copyright terms differ between countries, so check your '
-            'local laws before downloading.\n\n'
-            'Word definitions come from Wiktionary and translations from MyMemory; '
-            'the selected text is sent to those services.'),
-      ],
+      children: [Text(L10n.of(context).aboutText)],
     );
   }
 }
@@ -417,23 +455,33 @@ class _LanguageMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = Services.of(context).settings.catalogLanguage;
-    final label = languages.firstWhere((l) => l.$1 == current,
-        orElse: () => languages.first).$2;
+    String name((String, String) l) =>
+        l.$1.isEmpty ? L10n.of(context).allLanguages : l.$2;
+    final label = name(
+      languages.firstWhere(
+        (l) => l.$1 == current,
+        orElse: () => languages.first,
+      ),
+    );
     return PopupMenuButton<String>(
-      tooltip: 'Catalog language',
+      tooltip: L10n.of(context).catalogLanguage,
       initialValue: current,
       onSelected: onChanged,
       itemBuilder: (_) => [
-        for (final l in languages) PopupMenuItem(value: l.$1, child: Text(l.$2)),
+        for (final l in languages)
+          PopupMenuItem(value: l.$1, child: Text(name(l))),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.translate, size: 18),
-          const SizedBox(width: 6),
-          Text(label),
-          const Icon(Icons.arrow_drop_down),
-        ]),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.translate, size: 18),
+            const SizedBox(width: 6),
+            Text(label),
+            const Icon(Icons.arrow_drop_down),
+          ],
+        ),
       ),
     );
   }
@@ -455,44 +503,57 @@ class _LibrarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Expanded(
-            child: Text('Your library',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
-          ),
-          if (saved > 0)
-            TextButton.icon(
-              icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
-              onPressed: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => const LibraryScreen())),
-              label: Text('Library & shelves ($saved)'),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                L10n.of(context).yourLibrary,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-        ]),
+            if (saved > 0)
+              TextButton.icon(
+                icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LibraryScreen()),
+                ),
+                label: Text(L10n.of(context).libraryAndShelves(saved)),
+              ),
+          ],
+        ),
         const SizedBox(height: 12),
         if (downloaded.isEmpty)
           Card.filled(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(children: [
-                Icon(Icons.library_books_outlined,
-                    size: 36, color: theme.colorScheme.primary),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(saved == 0
-                      ? 'Your library is empty. Books you download from the '
-                          'catalog below will appear here, ready to read offline.'
-                      : 'No downloaded books. Your $saved saved '
-                          '${saved == 1 ? 'book is' : 'books are'} in Library & shelves.'),
-                ),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.library_books_outlined,
+                    size: 36,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      saved == 0
+                          ? L10n.of(context).libraryEmptyHome
+                          : L10n.of(context).noDownloadedSaved(saved),
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         else
           SizedBox(
             height: 244,
             child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context)
-                  .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+              behavior: ScrollConfiguration.of(
+                context,
+              ).copyWith(dragDevices: PointerDeviceKind.values.toSet()),
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.none,
@@ -515,11 +576,23 @@ class _RowHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-      Text(subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -568,7 +641,11 @@ class _SourceRowState extends State<_SourceRow> {
     final s = widget.source;
     _books = widget.query.isEmpty
         ? s.featured(language: widget.language, subject: widget.subject)
-        : s.search(widget.query, language: widget.language, subject: widget.subject);
+        : s.search(
+            widget.query,
+            language: widget.language,
+            subject: widget.subject,
+          );
   }
 
   @override
@@ -578,74 +655,104 @@ class _SourceRowState extends State<_SourceRow> {
     const rowHeight = 290.0;
 
     Widget frame(Widget body) => Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.pad),
-              child: _RowHeader(title: widget.source.name, subtitle: widget.source.tagline),
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.pad),
+            child: _RowHeader(
+              title: widget.source.name,
+              subtitle: sourceTagline(L10n.of(context), widget.source.id),
             ),
-            const SizedBox(height: 10),
-            body,
-          ]),
-        );
+          ),
+          const SizedBox(height: 10),
+          body,
+        ],
+      ),
+    );
 
     return FutureBuilder<List<Book>>(
       future: _books,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return frame(SizedBox(
-            height: rowHeight,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: widget.pad),
-              itemCount: 8,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
-              itemBuilder: (_, __) => Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: cardWidth,
-                  height: cardWidth * 1.5,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
+          return frame(
+            SizedBox(
+              height: rowHeight,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: widget.pad),
+                itemCount: 8,
+                separatorBuilder: (_, __) => const SizedBox(width: 16),
+                itemBuilder: (_, __) => Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    width: cardWidth,
+                    height: cardWidth * 1.5,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
                 ),
               ),
             ),
-          ));
+          );
         }
         if (snap.hasError) {
           final e = snap.error;
           // A rate-limited service just sits this round out.
           if (e is SourceException && e.busy) return const SizedBox.shrink();
-          return frame(Padding(
-            padding: EdgeInsets.symmetric(horizontal: widget.pad),
-            child: Row(children: [
-              Icon(Icons.cloud_off, size: 18, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 8),
-              Flexible(child: Text('Couldn’t reach ${widget.source.name}.')),
-              TextButton(onPressed: () => setState(_load), child: const Text('Try again')),
-            ]),
-          ));
+          return frame(
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.pad),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.cloud_off,
+                    size: 18,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      L10n.of(context).couldNotReach(widget.source.name),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(_load),
+                    child: Text(L10n.of(context).tryAgain),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
         final books = snap.data ?? const <Book>[];
-        if (books.isEmpty) return const SizedBox.shrink(); // nothing to offer here
-        return frame(SizedBox(
-          height: rowHeight,
-          child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context)
-                .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: widget.pad),
-              itemCount: books.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
-              itemBuilder: (context, i) =>
-                  SizedBox(width: cardWidth, child: _CatalogCard(book: books[i])),
+        if (books.isEmpty) {
+          return const SizedBox.shrink(); // nothing to offer here
+        }
+        return frame(
+          SizedBox(
+            height: rowHeight,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(
+                context,
+              ).copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: widget.pad),
+                itemCount: books.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 16),
+                itemBuilder: (context, i) => SizedBox(
+                  width: cardWidth,
+                  child: _CatalogCard(book: books[i]),
+                ),
+              ),
             ),
           ),
-        ));
+        );
       },
     );
   }
@@ -668,29 +775,39 @@ class _CatalogCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 2 / 3,
-            child: Stack(fit: StackFit.expand, children: [
-              BookCover(book: book),
-              Positioned(
-                right: 6,
-                bottom: 6,
-                child: ListenableBuilder(
-                  listenable: library,
-                  builder: (context, _) => _DownloadBadge(book: book),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                BookCover(book: book),
+                Positioned(
+                  right: 6,
+                  bottom: 6,
+                  child: ListenableBuilder(
+                    listenable: library,
+                    builder: (context, _) => _DownloadBadge(book: book),
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
-          Text(book.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            book.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(book.authorLine,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            authorLine(L10n.of(context), book),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -721,7 +838,9 @@ class _DownloadBadge extends StatelessWidget {
           width: 20,
           height: 20,
           child: CircularProgressIndicator(
-              strokeWidth: 2.5, value: library.downloads[book.id]),
+            strokeWidth: 2.5,
+            value: library.downloads[book.id],
+          ),
         ),
       );
     }
@@ -730,7 +849,7 @@ class _DownloadBadge extends StatelessWidget {
       shape: const CircleBorder(),
       elevation: 2,
       child: IconButton(
-        tooltip: 'Download free',
+        tooltip: L10n.of(context).downloadFree,
         visualDensity: VisualDensity.compact,
         iconSize: 18,
         icon: Icon(Icons.download, color: scheme.primary),

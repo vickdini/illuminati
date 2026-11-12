@@ -56,7 +56,12 @@ class ParsedBook {
   /// The book's own table of contents, in reading order (may be empty).
   final List<TocEntry> toc;
 
-  const ParsedBook(this.title, this.chapters, [this.images = const {}, this.toc = const []]);
+  const ParsedBook(
+    this.title,
+    this.chapters, [
+    this.images = const {},
+    this.toc = const [],
+  ]);
 
   /// Index into [toc] of the section containing a position, or -1.
   int sectionAt(int chapter, int block) {
@@ -133,7 +138,12 @@ ParsedBook parseEpubBytes(List<int> bytes) {
     return p.posix.normalize(joined);
   }
 
-  final title = opf.findAllElements('title', namespace: '*').firstOrNull?.innerText.trim() ??
+  final title =
+      opf
+          .findAllElements('title', namespace: '*')
+          .firstOrNull
+          ?.innerText
+          .trim() ??
       'Untitled';
 
   // Manifest: id -> (path, media type, properties)
@@ -155,11 +165,19 @@ ParsedBook parseEpubBytes(List<int> bytes) {
     label = label.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (label.isEmpty) return;
     final hash = href.indexOf('#');
-    final frag = hash >= 0 ? Uri.decodeComponent(href.substring(hash + 1)) : null;
-    tocRaw.add((resolve(base, href), frag == null || frag.isEmpty ? null : frag, label));
+    final frag = hash >= 0
+        ? Uri.decodeComponent(href.substring(hash + 1))
+        : null;
+    tocRaw.add((
+      resolve(base, href),
+      frag == null || frag.isEmpty ? null : frag,
+      label,
+    ));
   }
 
-  final navItem = manifest.values.where((m) => m.props.contains('nav')).firstOrNull;
+  final navItem = manifest.values
+      .where((m) => m.props.contains('nav'))
+      .firstOrNull;
   if (navItem != null) {
     final navHtml = readText(navItem.path);
     if (navHtml != null) {
@@ -167,12 +185,19 @@ ParsedBook parseEpubBytes(List<int> bytes) {
       final navDir = p.posix.dirname(navItem.path);
       // Only the main table of contents, not page lists or landmarks.
       final navs = doc.querySelectorAll('nav');
-      final toc = navs
-              .where((n) => n.attributes.entries
-                  .any((e) => e.key.toString().endsWith('type') && e.value.contains('toc')))
+      final toc =
+          navs
+              .where(
+                (n) => n.attributes.entries.any(
+                  (e) =>
+                      e.key.toString().endsWith('type') &&
+                      e.value.contains('toc'),
+                ),
+              )
               .firstOrNull ??
           navs.firstOrNull;
-      for (final a in toc?.querySelectorAll('a[href]') ?? const <dom.Element>[]) {
+      for (final a
+          in toc?.querySelectorAll('a[href]') ?? const <dom.Element>[]) {
         addLabel(navDir, a.attributes['href']!, a.text);
       }
     }
@@ -184,9 +209,17 @@ ParsedBook parseEpubBytes(List<int> bytes) {
     final ncxText = readText(ncxItem.path);
     if (ncxText != null) {
       final ncxDir = p.posix.dirname(ncxItem.path);
-      for (final np in XmlDocument.parse(ncxText).findAllElements('navPoint', namespace: '*')) {
-        final label = np.findElements('navLabel', namespace: '*').firstOrNull?.innerText;
-        final src = np.findElements('content', namespace: '*').firstOrNull?.getAttribute('src');
+      for (final np in XmlDocument.parse(
+        ncxText,
+      ).findAllElements('navPoint', namespace: '*')) {
+        final label = np
+            .findElements('navLabel', namespace: '*')
+            .firstOrNull
+            ?.innerText;
+        final src = np
+            .findElements('content', namespace: '*')
+            .firstOrNull
+            ?.getAttribute('src');
         if (label != null && src != null) addLabel(ncxDir, src, label);
       }
     }
@@ -203,7 +236,11 @@ ParsedBook parseEpubBytes(List<int> bytes) {
     final content = readText(item.path);
     if (content == null) continue;
     final anchors = <String, int>{};
-    final parsed = htmlToBlocks(content, baseDir: p.posix.dirname(item.path), anchors: anchors);
+    final parsed = htmlToBlocks(
+      content,
+      baseDir: p.posix.dirname(item.path),
+      anchors: anchors,
+    );
     // Keep only images we can actually load; drop the rest (e.g. SVG).
     bool keep(Block b) {
       if (b.type != BlockType.image) return true;
@@ -226,51 +263,94 @@ ParsedBook parseEpubBytes(List<int> bytes) {
     if (blocks.every((b) => b.type == BlockType.separator)) continue;
     chapterOfPath[item.path] = chapters.length;
     anchorsOfPath[item.path] = {
-      for (final e in anchors.entries) e.key: newIndex[e.value.clamp(0, newIndex.length - 1)]
+      for (final e in anchors.entries)
+        e.key: newIndex[e.value.clamp(0, newIndex.length - 1)],
     };
 
     final heading = blocks
         .where((b) => b.type.index <= BlockType.h3.index)
         .map((b) => b.runs.map((r) => r.text).join())
         .firstOrNull;
-    final label = tocRaw.where((t) => t.$1 == item.path).map((t) => t.$3).firstOrNull ??
+    final label =
+        tocRaw.where((t) => t.$1 == item.path).map((t) => t.$3).firstOrNull ??
         heading ??
         'Section ${chapters.length + 1}';
     chapters.add(Chapter(label, blocks));
   }
 
-  if (chapters.isEmpty) throw EpubFormatException('This book has no readable text.');
+  if (chapters.isEmpty) {
+    throw EpubFormatException('This book has no readable text.');
+  }
 
   final toc = <TocEntry>[];
   for (final (path, frag, label) in tocRaw) {
     final c = chapterOfPath[path];
     if (c == null) continue;
     final last = chapters[c].blocks.length - 1;
-    final block = frag == null ? 0 : (anchorsOfPath[path]![frag] ?? 0).clamp(0, last);
+    final block = frag == null
+        ? 0
+        : (anchorsOfPath[path]![frag] ?? 0).clamp(0, last);
     // Keep reading order; skip entries that would point backwards.
     if (toc.isNotEmpty) {
       final prev = toc.last;
-      if (c < prev.chapter || (c == prev.chapter && block < prev.block)) continue;
+      if (c < prev.chapter || (c == prev.chapter && block < prev.block)) {
+        continue;
+      }
     }
     toc.add(TocEntry(label, c, block));
   }
   return ParsedBook(title, chapters, images, toc);
 }
 
-final _rasterImage = RegExp(r'\.(jpe?g|png|gif|webp|bmp)$', caseSensitive: false);
+final _rasterImage = RegExp(
+  r'\.(jpe?g|png|gif|webp|bmp)$',
+  caseSensitive: false,
+);
 
 const _blockTags = {
-  'p', 'div', 'section', 'article', 'header', 'footer', 'aside', 'main',
-  'blockquote', 'pre', 'li', 'ul', 'ol', 'dl', 'dt', 'dd', 'table', 'tr',
-  'td', 'th', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'figure',
-  'figcaption', 'body', 'nav', 'center',
+  'p',
+  'div',
+  'section',
+  'article',
+  'header',
+  'footer',
+  'aside',
+  'main',
+  'blockquote',
+  'pre',
+  'li',
+  'ul',
+  'ol',
+  'dl',
+  'dt',
+  'dd',
+  'table',
+  'tr',
+  'td',
+  'th',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'hr',
+  'figure',
+  'figcaption',
+  'body',
+  'nav',
+  'center',
 };
 const _skipTags = {'script', 'style', 'head', 'math', 'title'};
 
 /// Converts one XHTML document into a flat list of text and image blocks.
 /// Image paths are resolved against [baseDir], the document's folder in the EPUB.
 /// Element ids are recorded in [anchors] as the index of the next block.
-List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>? anchors}) {
+List<Block> htmlToBlocks(
+  String source, {
+  String baseDir = '.',
+  Map<String, int>? anchors,
+}) {
   final doc = html_parser.parse(source);
   final body = doc.body;
   if (body == null) return [];
@@ -288,8 +368,11 @@ List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>?
     for (final r in runs) {
       final last = merged.isEmpty ? null : merged.last;
       if (last != null && last.italic == r.italic && last.bold == r.bold) {
-        merged[merged.length - 1] =
-            TextRun(last.text + r.text, italic: r.italic, bold: r.bold);
+        merged[merged.length - 1] = TextRun(
+          last.text + r.text,
+          italic: r.italic,
+          bold: r.bold,
+        );
       } else {
         merged.add(r);
       }
@@ -300,18 +383,25 @@ List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>?
       final t = isPre
           ? r.text.replaceAll(_br, '\n')
           : r.text
-              .replaceAll(RegExp(r'\s+'), ' ')
-              .replaceAll(RegExp(' ?$_br ?'), '\n');
+                .replaceAll(RegExp(r'\s+'), ' ')
+                .replaceAll(RegExp(' ?$_br ?'), '\n');
       if (t.isEmpty) continue;
       cleaned.add(TextRun(t, italic: r.italic, bold: r.bold));
     }
     runs = [];
     if (!isPre && cleaned.isNotEmpty) {
       final first = cleaned.first, last = cleaned.last;
-      cleaned[0] = TextRun(first.text.trimLeft(), italic: first.italic, bold: first.bold);
+      cleaned[0] = TextRun(
+        first.text.trimLeft(),
+        italic: first.italic,
+        bold: first.bold,
+      );
       final li = cleaned.length - 1;
-      cleaned[li] = TextRun(cleaned[li].text.trimRight(),
-          italic: last.italic, bold: last.bold);
+      cleaned[li] = TextRun(
+        cleaned[li].text.trimRight(),
+        italic: last.italic,
+        bold: last.bold,
+      );
       if (cleaned.every((r) => r.text.trim().isEmpty)) cleaned.clear();
     }
     cleaned.removeWhere((r) => r.text.isEmpty);
@@ -319,13 +409,13 @@ List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>?
   }
 
   BlockType typeFor(String tag, BlockType inherited) => switch (tag) {
-        'h1' => BlockType.h1,
-        'h2' => BlockType.h2,
-        'h3' || 'h4' || 'h5' || 'h6' => BlockType.h3,
-        'blockquote' => BlockType.quote,
-        'pre' => BlockType.pre,
-        _ => inherited,
-      };
+    'h1' => BlockType.h1,
+    'h2' => BlockType.h2,
+    'h3' || 'h4' || 'h5' || 'h6' => BlockType.h3,
+    'blockquote' => BlockType.quote,
+    'pre' => BlockType.pre,
+    _ => inherited,
+  };
 
   void walk(dom.Node node, BlockType blockType, bool italic, bool bold) {
     if (node is dom.Text) {
@@ -362,8 +452,17 @@ List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>?
       if (src == null || src.startsWith('data:') || src.contains('://')) return;
       flush();
       final clean = Uri.decodeFull(src.split('#').first);
-      final path = p.posix.normalize(baseDir == '.' ? clean : p.posix.join(baseDir, clean));
-      blocks.add(Block(BlockType.image, const [], image: path, alt: alt.isEmpty ? null : alt));
+      final path = p.posix.normalize(
+        baseDir == '.' ? clean : p.posix.join(baseDir, clean),
+      );
+      blocks.add(
+        Block(
+          BlockType.image,
+          const [],
+          image: path,
+          alt: alt.isEmpty ? null : alt,
+        ),
+      );
       return;
     }
     if (tag == 'svg') {
@@ -383,7 +482,9 @@ List<Block> htmlToBlocks(String source, {String baseDir = '.', Map<String, int>?
     // Record ids after flushing, so a heading's id points at the heading,
     // and an inline anchor at the paragraph it sits in.
     final id = node.id;
-    if (anchors != null && id.isNotEmpty) anchors.putIfAbsent(id, () => blocks.length);
+    if (anchors != null && id.isNotEmpty) {
+      anchors.putIfAbsent(id, () => blocks.length);
+    }
     for (final child in node.nodes) {
       walk(child, childType, childItalic, childBold);
     }
