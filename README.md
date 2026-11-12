@@ -57,6 +57,22 @@ copyright has expired.
   Keyboard: ←/→ or PageUp/PageDown turn pages, ↑/↓ scroll, Ctrl+F search,
   Ctrl+B bookmark, Esc closes search/toolbar or goes back.
 
+## Install
+
+Download the latest version from the
+[Releases page](https://github.com/vickdini/illuminati/releases/latest):
+
+| System | File | How |
+|---|---|---|
+| Windows | `Illuminati-windows-setup.exe` | Run it. It installs for your user only (no admin rights), adds a Start menu shortcut and can be removed from Settings → Apps. Windows may warn that the publisher is unknown: choose **More info → Run anyway**. |
+| Windows (portable) | `Illuminati-windows-x64.zip` | Unzip anywhere and run `illuminati.exe`. |
+| Android | `Illuminati-android.apk` | Open it on the phone and allow installing apps from your browser or file manager. |
+| macOS | `Illuminati-macos.dmg` | Open it and drag **Illuminati** to Applications. The first time, right-click the app and choose **Open**. |
+| Linux | `Illuminati-linux-x86_64.AppImage` | Make it executable (`chmod +x`) and run it. |
+| Linux (folder) | `Illuminati-linux-x64.tar.gz` | Extract it anywhere and run `Illuminati/illuminati`. |
+
+After that, the app keeps itself up to date (see [Updates](#updates)).
+
 ## Languages
 
 The interface is available in English, Spanish, French, German, Italian and
@@ -99,9 +115,44 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-That creates a GitHub Release with `Illuminati-android.apk`,
-`Illuminati-windows-x64.zip`, `Illuminati-macos.zip`,
+That creates a GitHub Release with `Illuminati-windows-setup.exe`,
+`Illuminati-windows-x64.zip`, `Illuminati-android.apk`, `Illuminati-macos.dmg`,
+`Illuminati-macos.zip`, `Illuminati-linux-x86_64.AppImage`,
 `Illuminati-linux-x64.tar.gz` and the manuals attached.
+
+The Windows installer is made with [Inno Setup](https://jrsoftware.org/isinfo.php)
+from `installer/windows/illuminati.iss`. To build it locally:
+
+```sh
+flutter build windows --release
+iscc /DAppVersion=1.0.0 installer/windows/illuminati.iss
+```
+
+### Updates
+
+Release builds update themselves from the latest GitHub Release
+(`lib/services/update_service.dart`). A few seconds after the app starts it
+checks for a newer version and downloads it in the background:
+
+- **Windows and Linux:** it's installed when the app is closed (or at once with
+  **Restart now**). A small script waits for the app to exit, then runs the
+  new installer silently (copies installed with the Windows installer, so
+  Settings → Apps shows the right version), replaces the `.AppImage` file, or
+  copies the new files over the installation (the portable zip and the Linux
+  folder). It logs to
+  `illuminati-update/update.log` in the temp folder. If the app's folder isn't
+  writable (e.g. under `C:\Program Files`), the app only says a new version
+  is available.
+- **Android:** the system installer opens; Android always asks the user to
+  confirm, and the first time to allow installs from Illuminati.
+- **macOS:** the app is sandboxed and can't replace itself, so it says a new
+  version is available and opens the download page.
+
+Only tagged releases (`v1.2.3`) have updates switched on: the workflow passes
+`--dart-define=APP_VERSION=1.2.3`. Local builds and the test builds from
+`main` never update themselves. Each release must have a higher version than
+the last, and Android also needs the build number to grow, which the workflow
+does from the run number.
 
 The macOS app isn't signed or notarized: the first time, right-click it and
 choose **Open**. Android APKs are signed with a temporary key unless these

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Entry point of the AppImage: runs the Flutter app next to this script.
+HERE="$(dirname "$(readlink -f "$0")")"
+exec "$HERE/illuminati" "$@"

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Illuminati
+Comment=Find, download and read free public-domain books
+Exec=illuminati
+Icon=illuminati
+Terminal=false
+Categories=Office;Viewer;Education;
+Keywords=ebook;reader;books;epub;Gutenberg;
