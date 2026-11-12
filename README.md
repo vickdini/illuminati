@@ -83,6 +83,27 @@ Release builds: `flutter build windows | macos | linux | apk | appbundle`.
 macOS builds need a Mac and Linux builds need Linux; Windows and Android
 build on this machine.
 
+### Builds on GitHub
+
+`.github/workflows/build.yml` tests and builds all four apps on every push to
+`main` and every pull request; download them from the run's **Artifacts** on
+the Actions tab. To publish a release, push a version tag:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+That creates a GitHub Release with `Illuminati-android.apk`,
+`Illuminati-windows-x64.zip`, `Illuminati-macos.zip`,
+`Illuminati-linux-x64.tar.gz` and the manuals attached.
+
+The macOS app isn't signed or notarized: the first time, right-click it and
+choose **Open**. Android APKs are signed with a temporary key unless these
+repository secrets are set, so each new APK can be installed over the last:
+`ANDROID_KEYSTORE_BASE64` (the keystore, base64-encoded),
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+
 ## How it works
 
 | Piece | File |
