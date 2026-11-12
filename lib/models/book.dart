@@ -118,13 +118,25 @@ class Book {
       );
 }
 
-/// A book the user has downloaded, with its local files and reading position.
+/// Reading state the user sets (or the reader sets on finishing a book).
+enum ReadingStatus { none, wantToRead, finished }
+
+/// A book in the user's library: its details, reading position and status.
+/// It may be downloaded (has [epubPath]) or just saved for later.
 class LibraryEntry {
   final Book book;
-  final String epubPath;
+
+  /// The downloaded EPUB, or null if the book isn't downloaded (yet).
+  String? epubPath;
   final String? coverPath;
   final DateTime addedAt;
   DateTime? lastOpened;
+  ReadingStatus status;
+
+  bool get isDownloaded => epubPath != null;
+
+  /// Opened and partly read, but not finished.
+  bool get isReading => isDownloaded && progress > 0 && status != ReadingStatus.finished;
 
   /// Index of the chapter the reader was on.
   int chapter;
@@ -141,10 +153,11 @@ class LibraryEntry {
 
   LibraryEntry({
     required this.book,
-    required this.epubPath,
+    this.epubPath,
     this.coverPath,
     required this.addedAt,
     this.lastOpened,
+    this.status = ReadingStatus.none,
     this.chapter = 0,
     this.block = 0,
     this.progress = 0,
@@ -161,11 +174,14 @@ class LibraryEntry {
         'block': block,
         'progress': progress,
         'anchor': anchor,
+        'status': status.name,
       };
 
   factory LibraryEntry.fromJson(Map<String, dynamic> j) => LibraryEntry(
         book: Book.fromJson((j['book'] as Map).cast<String, dynamic>()),
-        epubPath: j['epubPath'] as String,
+        epubPath: j['epubPath'] as String?,
+        status: ReadingStatus.values.firstWhere((s) => s.name == j['status'],
+            orElse: () => ReadingStatus.none),
         coverPath: j['coverPath'] as String?,
         addedAt: DateTime.parse(j['addedAt'] as String),
         lastOpened: j['lastOpened'] == null

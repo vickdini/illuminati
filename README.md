@@ -5,7 +5,16 @@ but its whole catalog is free: books that were never under copyright or whose
 copyright has expired.
 
 - **Your library** (top): books you have downloaded, most recently read first,
-  with reading progress. Long-press or right-click a book to remove it.
+  with reading progress. **Library & shelves** opens everything you've saved:
+  - Views: All, Downloaded, Want to read, Reading, Finished, and your own
+    **shelves** (e.g. "Favorites", "Philosophy"); a filter box; sorting by
+    recently read, title, author, progress or recently added.
+  - "Want to read", "Finished" and shelves work before downloading: the book is
+    saved to the library; tap it to open its page and download it. Opening a book ends
+    "Want to read"; reaching its end marks it Finished (with Undo).
+  - Long-press or right-click any book for its menu. **Remove download** frees
+    the space but keeps the book, its notes and place; **Remove from library**
+    deletes everything.
 - **Discover free books** (below): a row for each extra free catalog, then the
   Project Gutenberg catalog, sorted by popularity:
   - **Standard Ebooks**: carefully proofread and typeset editions (English).
@@ -53,7 +62,7 @@ build on this machine.
 |---|---|
 | Catalog client (Gutenberg OPDS feed: search, subjects, languages, details) | `lib/services/catalog_service.dart` |
 | Extra catalogs (Standard Ebooks, Wikisource, Internet Archive) | `lib/sources/` |
-| Downloads, local storage (`library.json`), reading progress | `lib/services/library_service.dart` |
+| Library: downloads, statuses, shelves, views and sorting (`library.json`) | `lib/services/library_service.dart` |
 | EPUB → chapters/paragraphs (runs on a background isolate) | `lib/services/epub_parser.dart` |
 | Offline title index (Gutenberg `pg_catalog.csv`, partial/accent-insensitive search) | `lib/services/title_index.dart` |
 | Highlights, notes, bookmarks (`notes/<id>.json`, re-anchored by text) | `lib/models/annotation.dart` |

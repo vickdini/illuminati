@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../models/annotation.dart';
+import '../models/shelf.dart';
 
 enum ReaderTheme { light, sepia, dark }
 
@@ -46,6 +47,10 @@ class SettingsService extends ChangeNotifier {
 
   HighlightColor highlightColor = HighlightColor.yellow;
 
+  /// Library screen: last view (see LibraryView) and sort order.
+  String libraryView = 'all';
+  LibrarySort librarySort = LibrarySort.recent;
+
   File? _file;
 
   Future<void> init() async {
@@ -66,6 +71,9 @@ class SettingsService extends ChangeNotifier {
         highlightColor = HighlightColor.values.firstWhere(
             (c) => c.name == j['highlightColor'],
             orElse: () => highlightColor);
+        libraryView = j['libraryView'] as String? ?? libraryView;
+        librarySort = LibrarySort.values.firstWhere((x) => x.name == j['librarySort'],
+            orElse: () => librarySort);
       } catch (_) {}
     }
   }
@@ -82,6 +90,8 @@ class SettingsService extends ChangeNotifier {
       'readingWpm': readingWpm,
       'translateTo': translateTo,
       'highlightColor': highlightColor.name,
+      'libraryView': libraryView,
+      'librarySort': librarySort.name,
     }));
   }
 }

@@ -10,6 +10,7 @@ import '../services/title_index.dart';
 import '../sources/book_source.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/book_cover.dart';
+import '../widgets/library_tile.dart';
 import 'book_actions.dart';
 import 'library_screen.dart';
 
@@ -432,7 +433,8 @@ class _LanguageMenu extends StatelessWidget {
   }
 }
 
-/// The top rows: books already downloaded to this device.
+/// The top rows: books already downloaded to this device, plus a way into
+/// the whole library (shelves, Want to read, Finished).
 class _LibrarySection extends StatelessWidget {
   final double pad;
   const _LibrarySection({required this.pad});
@@ -441,7 +443,8 @@ class _LibrarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final library = Services.of(context).library;
     final theme = Theme.of(context);
-    final entries = library.entries;
+    final downloaded = library.downloaded;
+    final saved = library.entries.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,15 +454,16 @@ class _LibrarySection extends StatelessWidget {
             child: Text('Your library',
                 style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
           ),
-          if (entries.isNotEmpty)
-            TextButton(
+          if (saved > 0)
+            TextButton.icon(
+              icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
               onPressed: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const LibraryScreen())),
-              child: Text('See all (${entries.length})'),
+              label: Text('Library & shelves ($saved)'),
             ),
         ]),
         const SizedBox(height: 12),
-        if (entries.isEmpty)
+        if (downloaded.isEmpty)
           Card.filled(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -467,9 +471,12 @@ class _LibrarySection extends StatelessWidget {
                 Icon(Icons.library_books_outlined,
                     size: 36, color: theme.colorScheme.primary),
                 const SizedBox(width: 16),
-                const Expanded(
-                  child: Text('Your library is empty. Books you download from the '
-                      'catalog below will appear here, ready to read offline.'),
+                Expanded(
+                  child: Text(saved == 0
+                      ? 'Your library is empty. Books you download from the '
+                          'catalog below will appear here, ready to read offline.'
+                      : 'No downloaded books. Your $saved saved '
+                          '${saved == 1 ? 'book is' : 'books are'} in Library & shelves.'),
                 ),
               ]),
             ),
@@ -483,96 +490,14 @@ class _LibrarySection extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.none,
-                itemCount: entries.length,
+                itemCount: downloaded.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, i) => LibraryTile(entry: entries[i]),
+                itemBuilder: (context, i) => LibraryTile(entry: downloaded[i]),
               ),
             ),
           ),
       ],
     );
-  }
-}
-
-/// A downloaded book: cover, title and reading progress.
-class LibraryTile extends StatelessWidget {
-  final LibraryEntry entry;
-  final double width;
-  const LibraryTile({super.key, required this.entry, this.width = 120});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final pct = (entry.progress * 100).round();
-    void menu(Offset? at) => _showMenu(context, at);
-
-    return SizedBox(
-      width: width,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => openReader(context, entry),
-        onLongPress: () => menu(null),
-        onSecondaryTapUp: (d) => menu(d.globalPosition),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 2 / 3,
-              child: BookCover(book: entry.book, localPath: entry.coverPath),
-            ),
-            const SizedBox(height: 8),
-            Text(entry.book.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            Row(children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(value: entry.progress, minHeight: 3),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(pct == 0 ? 'New' : '$pct%', style: theme.textTheme.labelSmall),
-            ]),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showMenu(BuildContext context, Offset? at) async {
-    final Future<String?> pick = at != null
-        ? showMenu<String>(
-            context: context,
-            position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
-            items: const [
-              PopupMenuItem(value: 'info', child: Text('Book details')),
-              PopupMenuItem(value: 'remove', child: Text('Remove download')),
-            ],
-          )
-        : showModalBottomSheet<String>(
-            context: context,
-            builder: (ctx) => SafeArea(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Book details'),
-                  onTap: () => Navigator.pop(ctx, 'info'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline),
-                  title: const Text('Remove download'),
-                  onTap: () => Navigator.pop(ctx, 'remove'),
-                ),
-              ]),
-            ),
-          );
-    final choice = await pick;
-    if (!context.mounted) return;
-    if (choice == 'info') showBookDetails(context, entry.book);
-    if (choice == 'remove') confirmRemove(context, entry.book);
   }
 }
 
@@ -775,7 +700,7 @@ class _DownloadBadge extends StatelessWidget {
     final library = Services.of(context).library;
     final scheme = Theme.of(context).colorScheme;
 
-    if (library.has(book.id)) {
+    if (library.isDownloaded(book.id)) {
       return CircleAvatar(
         radius: 16,
         backgroundColor: scheme.primary,

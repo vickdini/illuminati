@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../models/book.dart';
 import '../widgets/book_cover.dart';
+import 'collection_actions.dart';
 import 'reader_screen.dart';
 
-/// Opens a downloaded book in the reader.
+/// Opens a downloaded book in the reader; a saved but not downloaded book
+/// opens its details page (with the Download button) instead.
 void openReader(BuildContext context, LibraryEntry entry) {
+  if (!entry.isDownloaded) {
+    showBookDetails(context, entry.book);
+    return;
+  }
   Services.of(context).library.markOpened(entry.book.id);
   Navigator.of(context).push(MaterialPageRoute(
     builder: (_) => ReaderScreen(entry: entry),
@@ -34,8 +40,9 @@ Future<void> confirmRemove(BuildContext context, Book book) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Remove from library?'),
-      content: Text('“${book.title}” will be deleted from this device. '
-          'You can download it again at any time.'),
+      content: Text('“${book.title}” will be removed from your library and shelves, '
+          'with its notes, highlights and bookmarks. You can download it again '
+          'at any time.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
         FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
@@ -103,7 +110,7 @@ class _BookDetailsState extends State<_BookDetails> {
         final progress = library.downloads[book.id];
 
         Widget action;
-        if (entry != null) {
+        if (entry != null && entry.isDownloaded) {
           action = FilledButton.icon(
             icon: const Icon(Icons.menu_book),
             label: Text(entry.progress > 0 ? 'Continue reading' : 'Read now'),
@@ -187,10 +194,18 @@ class _BookDetailsState extends State<_BookDetails> {
                             }
                           },
                         ),
-                      if (entry != null)
+                      const SizedBox(height: 8),
+                      _CollectionButtons(book: book, entry: entry),
+                      if (entry != null && entry.isDownloaded && !downloading)
+                        TextButton.icon(
+                          icon: const Icon(Icons.cloud_off_outlined),
+                          label: const Text('Remove download'),
+                          onPressed: () => removeDownload(context, entry),
+                        ),
+                      if (entry != null && !downloading)
                         TextButton.icon(
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text('Remove download'),
+                          label: const Text('Remove from library'),
                           onPressed: () async {
                             await confirmRemove(context, book);
                             if (context.mounted && !library.has(book.id)) {
@@ -244,6 +259,51 @@ class _BookDetailsState extends State<_BookDetails> {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}K';
     return '$n';
+  }
+}
+
+/// Want to read / Finished / Add to shelf. Works before downloading: the
+/// book is saved to the library without its file.
+class _CollectionButtons extends StatelessWidget {
+  final Book book;
+  final LibraryEntry? entry;
+  const _CollectionButtons({required this.book, required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final library = Services.of(context).library;
+    final status = entry?.status ?? ReadingStatus.none;
+    final shelves = entry == null ? const [] : library.shelvesOf(book.id);
+    return Wrap(spacing: 8, runSpacing: 8, children: [
+      FilterChip(
+        avatar: Icon(status == ReadingStatus.wantToRead ? Icons.bookmark : Icons.bookmark_border,
+            size: 18),
+        showCheckmark: false,
+        label: const Text('Want to read'),
+        selected: status == ReadingStatus.wantToRead,
+        onSelected: (on) =>
+            library.setStatus(book, on ? ReadingStatus.wantToRead : ReadingStatus.none),
+      ),
+      FilterChip(
+        avatar: Icon(
+            status == ReadingStatus.finished ? Icons.check_circle : Icons.check_circle_outline,
+            size: 18),
+        showCheckmark: false,
+        label: const Text('Finished'),
+        selected: status == ReadingStatus.finished,
+        onSelected: (on) =>
+            library.setStatus(book, on ? ReadingStatus.finished : ReadingStatus.none),
+      ),
+      ActionChip(
+        avatar: const Icon(Icons.collections_bookmark_outlined, size: 18),
+        label: Text(shelves.isEmpty
+            ? 'Add to shelf'
+            : shelves.length == 1
+                ? 'On “${shelves.first.name}”'
+                : 'On ${shelves.length} shelves'),
+        onPressed: () => showShelfPicker(context, book),
+      ),
+    ]);
   }
 }
 

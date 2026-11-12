@@ -99,7 +99,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _open() async {
-    final path = widget.entry.epubPath;
+    final path = widget.entry.epubPath!; // the reader only opens downloaded books
     try {
       // Parse on a background isolate; pass a top-level function so nothing
       // from this State object is captured and sent across.
@@ -216,6 +216,25 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _wpm = (_wpm * 0.85 + wpm * 0.15).clamp(100.0, 700.0);
   }
 
+  bool _finishHandled = false;
+
+  /// Marks the book finished once per session, with an Undo.
+  void _markFinished() {
+    if (_finishHandled) return;
+    _finishHandled = true;
+    final book = widget.entry.book;
+    final previous = _services.library.entry(book.id)?.status ?? ReadingStatus.none;
+    if (previous == ReadingStatus.finished) return;
+    _services.library.setStatus(book, ReadingStatus.finished);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('You finished “${book.title}”. It’s now on your Finished list.'),
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () => _services.library.setStatus(book, previous),
+      ),
+    ));
+  }
+
   void _onPositions() {
     final visible = _positions.itemPositions.value
         .where((p) => p.itemTrailingEdge > 0 && p.itemLeadingEdge < 1);
@@ -226,6 +245,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       if (p.index > last) last = p.index;
     }
     final blockCount = _book!.chapters[_chapter].blocks.length;
+    // "The End" (the item after the last paragraph of the last chapter) is
+    // on screen: the book is finished.
+    if (_chapter == _book!.chapters.length - 1 && last >= blockCount) _markFinished();
     final block = first.clamp(0, blockCount - 1);
     final lastBlock = last.clamp(0, blockCount - 1);
     if (block != _block || lastBlock != _lastVisible) {
