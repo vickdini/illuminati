@@ -93,6 +93,19 @@ jobs:
         with:
           name: Illuminati-android
           path: Illuminati-android.apk
+      - name: Google Play bundle
+        # For uploading to the Play Console. No in-app updater (Play doesn't
+        # allow it): no APP_VERSION, and ILLUMINATI_STORE=play removes its
+        # install permission. Signed with the same key, as the upload key.
+        env:
+          ILLUMINATI_STORE: play
+        run: |
+          flutter build appbundle --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+          mv build/app/outputs/bundle/release/app-release.aab Illuminati-play.aab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: play-store-bundle
+          path: Illuminati-play.aab
 
   windows:
     needs: test
@@ -259,6 +272,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          # Everything except the Play bundle, which goes to the Play Console.
+          pattern: Illuminati-*
           merge-multiple: true
       - name: Create the release
         env:

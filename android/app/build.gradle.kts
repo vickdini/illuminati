@@ -9,7 +9,8 @@ plugins {
 
 android {
     namespace = "com.illuminati.illuminati"
-    compileSdk = flutter.compileSdkVersion
+    // Android 16. Google Play requires new apps and updates to target it.
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -22,12 +23,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // Never change: Google Play identifies the app by it.
         applicationId = "com.illuminati.illuminati"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -51,6 +50,15 @@ android {
                 keyPassword = keyProperties.getProperty("keyPassword")
             }
         }
+    }
+
+    // Google Play builds (ILLUMINATI_STORE=play, set by the GitHub workflow):
+    // Play updates the app itself and doesn't allow apps to install updates,
+    // so src/play/AndroidManifest.xml removes the updater's install permission
+    // and file provider. (The Dart updater is off too: Play builds don't get
+    // --dart-define=APP_VERSION.)
+    if (System.getenv("ILLUMINATI_STORE") == "play") {
+        sourceSets.getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
     }
 
     buildTypes {
