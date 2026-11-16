@@ -25,7 +25,8 @@ android {
     defaultConfig {
         // Never change: Google Play identifies the app by it.
         applicationId = "com.illuminati.illuminati"
-        minSdk = flutter.minSdkVersion
+        // Android 7.0. Google Play's automatic protection requires at least 24.
+        minSdk = 24
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
